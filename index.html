@@ -1,0 +1,943 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<meta name="color-scheme" content="light only">
+<title>DIMAYOR · Partidos de la Semana</title>
+<link rel="icon" type="image/x-icon" href="favicon.ico">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root{
+    color-scheme: light only; /* evita que el WebView de Android TV invierta los colores */
+    --bg:#f0f4f8;
+    --card:#ffffff;
+    --text:#0f172a;
+    --muted:#64748b;
+    --line:#e2e8f0;
+    --primary:#004c99;
+    --primary-light:#0063cc;
+    --primary-dark:#003578;
+    --success:#059669;
+    --danger:#dc2626;
+    --soft-blue:#e6f0fa;
+    --soft-red:#fde8e8;
+    --shadow-sm:0 1px 2px rgba(15,23,42,.06);
+    --shadow:0 4px 14px rgba(15,23,42,.08);
+    --shadow-lg:0 14px 34px rgba(15,23,42,.14);
+    --ease:cubic-bezier(.16,1,.3,1);
+    --s:1; /* factor de escala por columna (lo calcula el script) */
+  }
+
+  /* TODO el tamaño se basa en el tamaño de la pantalla, no en píxeles fijos.
+     En una pantalla 1920x1080, 1rem = 16px. En una TV que reporta 960x540
+     (muy común en Android TV), 1rem = 8px, y se ve exactamente igual.
+     Así el board se ve idéntico en Fully Kiosk, screenlite o cualquier navegador. */
+  html{ font-size:16px; font-size:min(0.8333vw, 1.4815vh); }
+  *{ box-sizing:border-box; }
+  html,body{
+    height:100%; margin:0; padding:0; overflow:hidden;
+    background:var(--bg); color:var(--text);
+    font-family:'DM Sans', sans-serif;
+  }
+  .board{ height:100vh; height:100dvh; display:flex; flex-direction:column; }
+
+  /* ---------- Barra superior ---------- */
+  header{
+    flex:0 0 auto;
+    background:linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%);
+    color:#fff; display:flex; align-items:center; justify-content:space-between;
+    padding:.6rem 1.4rem; box-shadow:var(--shadow);
+  }
+  .brand{ display:flex; align-items:center; gap:.9rem; }
+  .brand img{ height:1.7rem; }
+  .brand .sep{ width:1px; height:1.4rem; background:rgba(255,255,255,.3); }
+  .brand .t1{ font-size:1.1rem; font-weight:700; letter-spacing:.02em; line-height:1.15; }
+  .brand .t2{ font-size:.72rem; color:rgba(255,255,255,.75); }
+  .clock{ font-family:'DM Mono', monospace; font-size:.9rem; color:rgba(255,255,255,.9); }
+  .clock b{ font-weight:500; color:#fff; }
+
+  /* ---------- Tabla de 7 días ---------- */
+  .table{
+    flex:1 1 auto; min-height:0;
+    display:grid; grid-template-columns:repeat(7, minmax(0, 1fr));
+    gap:.4rem; padding:.5rem .6rem;
+    transition:opacity .7s ease;
+  }
+  .table.dimmed{ opacity:0; }
+  .day{
+    min-height:0; min-width:0; display:flex; flex-direction:column;
+    background:var(--card); border:1px solid var(--line); border-radius:.8rem;
+    box-shadow:var(--shadow-sm); overflow:hidden;
+  }
+  .day.today{
+    border-color:var(--primary-light);
+    box-shadow:var(--shadow-lg), 0 0 0 2px rgba(0,99,204,.35) inset;
+  }
+  .dayHead{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:center; gap:.55rem;
+    padding:.45rem .4rem; border-bottom:1px solid var(--line);
+    background:linear-gradient(180deg, var(--soft-blue), var(--card));
+  }
+  .day.today .dayHead{ background:linear-gradient(180deg, var(--primary), var(--primary-dark)); border-bottom-color:var(--primary-dark); }
+  .dayHead .num{
+    width:2.2rem; height:2.2rem; border-radius:50%; flex:0 0 auto;
+    display:flex; align-items:center; justify-content:center;
+    background:#fff; color:var(--primary-dark); box-shadow:var(--shadow-sm);
+    font-family:'DM Mono', monospace; font-weight:700; font-size:.95rem;
+  }
+  .dayHead .hd{ line-height:1.2; min-width:0; }
+  .dayHead .wd{ font-size:.85rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--primary-dark); }
+  .dayHead .mo{ font-size:.65rem; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
+  .day.today .dayHead .wd{ color:#fff; }
+  .day.today .dayHead .mo{ color:rgba(255,255,255,.85); }
+
+  .dayBody{
+    flex:1 1 auto; min-height:0; overflow:hidden;
+    display:flex; flex-direction:column;
+    gap:calc(.4rem * var(--s)); padding:calc(.45rem * var(--s));
+  }
+  .empty{ margin:auto; color:var(--muted); font-size:.8rem; text-align:center; }
+
+  /* ---------- Tarjeta de partido (modo normal) ---------- */
+  .match{
+    flex:0 0 auto; position:relative;
+    display:flex; flex-direction:column; gap:calc(.22rem * var(--s));
+    background:var(--comp-bg, var(--card));
+    border:1px solid var(--line); border-left:calc(.28rem * var(--s)) solid var(--comp-color, var(--primary));
+    border-radius:.5rem; padding:calc(.45rem * var(--s)) calc(.55rem * var(--s));
+    box-shadow:var(--shadow-sm);
+  }
+  .match.finalizado{ opacity:.92; background:var(--comp-bg-soft, var(--card)); }
+  .match.vivo{ box-shadow:0 0 0 2px rgba(220,38,38,.55), var(--shadow); animation:liveGlow 1.8s ease-in-out infinite; }
+  .comp{
+    display:flex; align-items:center; gap:.35em;
+    font-size:calc(.6rem * var(--s)); font-weight:600; letter-spacing:.03em;
+    text-transform:uppercase; color:var(--muted); line-height:1.2;
+  }
+  .comp img{ width:1.3em; height:1.3em; object-fit:contain; flex:0 0 auto; border-radius:2px; }
+  .title{
+    font-size:calc(.92rem * var(--s)); font-weight:700; line-height:1.2;
+    overflow-wrap:anywhere;
+  }
+  .venue{ font-size:calc(.64rem * var(--s)); color:var(--muted); line-height:1.25; overflow-wrap:anywhere; }
+  .status{ display:flex; align-items:center; justify-content:center; }
+  .kickoff{ font-family:'DM Mono', monospace; font-weight:600; font-size:calc(.95rem * var(--s)); color:var(--primary); white-space:nowrap; }
+  .scoreBox{ display:flex; flex-direction:column; align-items:center; }
+  .score{ font-family:'DM Mono', monospace; font-weight:800; font-size:calc(1.15rem * var(--s)); line-height:1; white-space:nowrap; }
+  .scoreBox.live .score{ color:var(--danger); }
+  .clockTxt{
+    display:flex; align-items:center; gap:.35em; margin-top:.2em;
+    font-size:calc(.58rem * var(--s)); color:var(--muted); text-transform:uppercase; letter-spacing:.04em;
+  }
+  .dotLive{ width:.45em; height:.45em; min-width:5px; min-height:5px; border-radius:50%; background:var(--danger); animation:pulse 1s infinite; flex:0 0 auto; }
+  .badge{
+    display:inline-flex; align-items:center; gap:.35em; white-space:nowrap;
+    font-size:calc(.62rem * var(--s)); font-weight:700; letter-spacing:.04em; text-transform:uppercase;
+    padding:.2em .7em; border-radius:2em;
+  }
+  .badge.live{ background:var(--soft-red); color:var(--danger); }
+  .badge.done{ background:#eef1f5; color:var(--muted); }
+  .events{
+    display:flex; justify-content:space-between; gap:.5em;
+    font-size:calc(.56rem * var(--s)); color:var(--muted); line-height:1.5;
+    border-top:1px dashed var(--line); padding-top:calc(.25rem * var(--s));
+  }
+  .events > div{ flex:1; min-width:0; overflow-wrap:anywhere; }
+  .events > div.right{ text-align:right; }
+  .progress{ height:calc(.2rem * var(--s)); min-height:2px; border-radius:2px; background:var(--soft-red); overflow:hidden; }
+  .progress i{ display:block; height:100%; background:var(--danger); }
+
+  /* ---------- Modo compacto (días con muchos partidos) ----------
+     Cada partido pasa a ser una sola fila: [hora o marcador] + [equipos].
+     El color de la competencia se mantiene en el borde izquierdo (ver leyenda abajo).
+     Nunca se ocultan partidos: solo se quitan los detalles secundarios. */
+  .dayBody.compact .match{
+    flex-direction:row; align-items:center; gap:calc(.45rem * var(--s));
+    padding:calc(.3rem * var(--s)) calc(.45rem * var(--s));
+  }
+  .dayBody.compact .comp,
+  .dayBody.compact .venue,
+  .dayBody.compact .events,
+  .dayBody.compact .progress,
+  .dayBody.compact .clockTxt{ display:none; }
+  .dayBody.compact .status{ order:-1; flex:0 0 auto; justify-content:flex-start; }
+  .dayBody.compact .title{ font-size:calc(.8rem * var(--s)); font-weight:600; }
+  .dayBody.compact .kickoff{ font-size:calc(.72rem * var(--s)); }
+  .dayBody.compact .score{ font-size:calc(.85rem * var(--s)); }
+
+  /* Animación de entrada: solo en la primera carga, no en cada actualización */
+  .board.intro .day{ animation:rowIn .5s var(--ease) both; }
+  .board.intro .match{ animation:cardIn .45s var(--ease) both; }
+  .board.intro .match.vivo{ animation:cardIn .45s var(--ease) both, liveGlow 1.8s ease-in-out infinite; }
+
+  /* ---------- Pie ---------- */
+  footer{
+    flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:1rem;
+    padding:.35rem 1.1rem; font-size:.68rem; color:var(--muted);
+    border-top:1px solid var(--line); background:var(--card);
+  }
+  .legend{ display:flex; flex-wrap:wrap; justify-content:center; gap:.3rem .9rem; flex:1 1 auto; }
+  .legend span{ display:inline-flex; align-items:center; gap:.35em; white-space:nowrap; }
+  .legend i{ width:.75em; height:.75em; border-radius:2px; display:inline-block; }
+  .onlinePill{ display:flex; align-items:center; gap:.4em; color:var(--success); font-weight:500; white-space:nowrap; }
+  .onlineDot{ width:.5rem; height:.5rem; border-radius:50%; background:var(--success); box-shadow:0 0 6px rgba(5,150,105,.6); animation:pulse 1.6s infinite; }
+  #statusLine{ white-space:nowrap; }
+
+  /* ---------- Imágenes de Drive (pantalla completa) ---------- */
+  .overlay{
+    position:fixed; top:0; left:0; right:0; bottom:0; z-index:50;
+    display:flex; align-items:center; justify-content:center; background:#000;
+    opacity:0; visibility:hidden; transition:opacity .7s ease, visibility .7s ease;
+  }
+  .overlay.visible{ opacity:1; visibility:visible; }
+  .overlay img{ max-width:100%; max-height:100%; object-fit:contain; animation:fadeIn .6s ease both; }
+
+  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
+  @keyframes rowIn{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);} }
+  @keyframes cardIn{ from{opacity:0; transform:translateY(8px) scale(.97);} to{opacity:1; transform:none;} }
+  @keyframes liveGlow{
+    0%,100%{ box-shadow:0 0 0 2px rgba(220,38,38,.55), var(--shadow); }
+    50%{ box-shadow:0 0 0 4px rgba(220,38,38,.18), var(--shadow-lg); }
+  }
+</style>
+</head>
+<body>
+<div class="board intro" id="board">
+  <header>
+    <div class="brand">
+      <img src="https://lh3.googleusercontent.com/d/1l4mdgdoIJxuPBRY8VDhhC-AJQW6vgdWr" alt="DIMAYOR">
+      <div class="sep"></div>
+      <div>
+        <div class="t1">Partidos de la Semana</div>
+        <div class="t2">Calendarios por competencia</div>
+      </div>
+    </div>
+    <div class="clock">Hoy <b id="clockDate">--</b> · <b id="clockTime">--:--</b></div>
+  </header>
+
+  <div class="table" id="table"></div>
+
+  <footer>
+    <span id="statusLine">Iniciando…</span>
+    <div class="legend" id="legend"></div>
+    <span class="onlinePill"><span class="onlineDot"></span>En línea</span>
+  </footer>
+</div>
+
+<div class="overlay" id="driveOverlay"></div>
+
+<script>
+/* =========================================================
+   CONFIGURACIÓN
+   ========================================================= */
+const CONFIG = {
+  API_KEY: 'AIzaSyC2oQ0Y7RYZX_lgkgPIchochLltCnN78nc',
+  TIMEZONE: 'America/Bogota',
+  UTC_OFFSET: '-05:00',          // Colombia no tiene horario de verano
+  DAYS: 7,                       // hoy + 6 días siguientes
+  REFRESH_EVENTS_MS: 3 * 60 * 1000,
+  TICK_MS: 20 * 1000,
+  MATCH_DURATION_MIN: 130,
+  RELOAD_AT_MIDNIGHT: true,
+
+  // Ajuste automático de cada columna para que quepan TODOS los partidos:
+  // 1) se achica la tarjeta normal hasta FIT_MIN_FULL;
+  // 2) si aún no cabe, pasa a modo compacto (una fila por partido) y se achica hasta FIT_MIN_COMPACT.
+  FIT_MIN_FULL: 0.72,
+  FIT_MIN_COMPACT: 0.35,
+
+  // Cuánto se muestra la tabla antes de pasar a las imágenes de Drive (si hay imágenes).
+  TABLE_SECONDS: 60,
+
+  // --- Marcadores: SOLO para los partidos de HOY ---
+  ESPN_BASE: 'https://site.api.espn.com/apis/site/v2/sports/soccer',
+  SCORE_CACHE_TTL_MS: 10 * 60 * 1000, // partido terminado sin resultado: se reintenta cada 10 min
+  LIVE_CACHE_TTL_MS: 45 * 1000,       // partido en vivo: se refresca cada 45 s
+  FALLBACK_RETRY_MS: 15 * 60 * 1000,  // respaldos: reintento si la API aún no marcaba el partido como terminado
+  FALLBACK_GIVE_UP_MS: 4 * 60 * 60 * 1000, // deja de insistir 4 h después del final programado
+
+  HIGHLIGHTLY_BASE: 'https://soccer.highlightly.net',
+  HIGHLIGHTLY_KEY: 'a6b66c69-8339-4d1c-9a4f-cb52ebf12cc8',
+  HIGHLIGHTLY_SEASON: 2026,
+  KICKOFFAPI_BASE: 'https://api.kickoffapi.com/api/v1',
+  KICKOFFAPI_KEY: 'ft_moreno58_87f19eb131868b5c7040356f34c927f0f8339100',
+  KICKOFFAPI_SEASON: 2026,
+  ALLSPORTS_BASE: 'https://apiv2.allsportsapi.com/football/',
+  ALLSPORTS_KEY: '43410442a93b71d2246d53ed2f2e10277656e3ff14061429bfc585fc00dc4c0c',
+  SPORTSDB_BASE: 'https://www.thesportsdb.com/api/v1/json/123',
+
+  // --- Imágenes de Google Drive ---
+  // IMPORTANTE: aquí va el ID de la carpeta que tiene las imágenes DIRECTAMENTE adentro
+  // (la subcarpeta "Nuevas"). Si se deja el ID de la carpeta raíz, solo se leen las
+  // imágenes sueltas en la raíz, no las que están dentro de "Nuevas".
+  DRIVE_FOLDER_ID: '1rJfhagt9jHHnwm_8v2kDxZeWTqg48IcT',
+  DRIVE_API_KEY: 'AIzaSyBrdcqFd_zz4TTOXYta4cvwVMc0PDuaF9U',
+  DRIVE_REFRESH_MS: 5 * 60 * 1000,
+  DRIVE_IMAGE_SECONDS: 8
+};
+
+const CALENDARS = [
+  { id: 'c_74d60f90f8e2a5d566429af24fd4c5e4c6a083e5a62027cec34a5c362b8dd49a@group.calendar.google.com', label: 'Liga BetPlay Dimayor', color: '#f3cc23', bgColor: '#fdf5d3', bgColorSoft: '#fef9e5', logo: 'https://lh3.googleusercontent.com/d/1tVCRbR0BNTcSqzoDd0jgs_9dvrvYK2pX', espnSlug: 'col.1', sportsDbId: 4497, highlightlyId: 204173, kickoffLeagueId: 239, allSportsLeagueId: 120 },
+  { id: 'c_b440f465efac86a96197d6c92dcdc371f00f55c22b201b5e4bdb446aa1d558e0@group.calendar.google.com', label: 'Torneo BetPlay Dimayor', color: '#6fb2e3', bgColor: '#e2f0f9', bgColorSoft: '#eef6fc', logo: 'https://lh3.googleusercontent.com/d/1t64NZwLCkCo4ofMZVYzhfcV8pSsVwCfv', espnSlug: 'col.2', sportsDbId: 4951, highlightlyId: 205024, kickoffLeagueId: 240, allSportsLeagueId: 517 },
+  { id: 'c_f4e132b3db024af62da58634ae149e2baabbe282f113c0f7d9ddea1ffe67d42f@group.calendar.google.com', label: 'Copa BetPlay Dimayor', color: '#3bad4c', bgColor: '#d8efdb', bgColorSoft: '#e7f5ea', logo: 'https://lh3.googleusercontent.com/d/1TELaujxqcd_Q_I3HwUxriPuUuwOx2Wrl', espnSlug: 'col.copa', sportsDbId: null, highlightlyId: 205875, kickoffLeagueId: 241, allSportsLeagueId: 475 },
+  { id: 'c_d95f7411f89d37a29d9135d9b963cb157e2c0e8ca5971cfe34320415fa6d9254@group.calendar.google.com', label: 'Superliga BetPlay Dimayor', color: '#062a63', bgColor: '#cdd4e0', bgColorSoft: '#e1e5ec', logo: 'https://lh3.googleusercontent.com/d/1UJxk_10wBGXLNs5_gaVFI6xmUkT47uYq', espnSlug: 'col.superliga', sportsDbId: null, highlightlyId: 607547, kickoffLeagueId: 713, allSportsLeagueId: 527 },
+  { id: 'c_4317288379f78b336a1509f4f6f678aad84d2b08c72797d268346ea2122beb79@group.calendar.google.com', label: 'Liga Femenina BetPlay Dimayor', color: '#b51a65', bgColor: '#f0d1e0', bgColorSoft: '#f6e4ed', logo: 'https://lh3.googleusercontent.com/d/1GRGoELSTVM2sDydzsswzi6XvjCDxK84y', espnSlug: null, sportsDbId: null, highlightlyId: 606696, kickoffLeagueId: 712, allSportsLeagueId: 466 },
+  { id: 'c_c51065fa3d2f6c30997d0480ee6168233541fa6d80f79e989c70649a83655fad@group.calendar.google.com', label: 'Otras competiciones', color: '#64748b', bgColor: '#e0e3e8', bgColorSoft: '#eceef1', logo: 'https://lh3.googleusercontent.com/d/1nAOaOA7FCdprzPq6LBwuqTEHVEAQpRzU', espnSlug: null, sportsDbId: null, highlightlyId: null, kickoffLeagueId: null, allSportsLeagueId: null },
+  { id: 'c_b9881758c97c62967ca1e1638d560af12815ed0262b6bf7d7afc2d910b7cf03a@group.calendar.google.com', label: 'CONMEBOL Libertadores', color: '#c9a227', bgColor: '#f4ecd4', bgColorSoft: '#f9f4e5', logo: 'https://lh3.googleusercontent.com/d/1iRkeR307HOxDvVcV8u_IKMkZ3_b0GAye', espnSlug: 'conmebol.libertadores', sportsDbId: null, highlightlyId: null, kickoffLeagueId: null, allSportsLeagueId: null },
+  { id: 'c_353a23183eccc44a15047f4aa971ca96526a53f16170a1b69e0357d2c324c10c@group.calendar.google.com', label: 'CONMEBOL Sudamericana', color: '#c23b3b', bgColor: '#f3d8d8', bgColorSoft: '#f8e7e7', logo: 'https://lh3.googleusercontent.com/d/1rJQeeoIs9SMrNyuLhVvJCFOtgR9Hq5FE', espnSlug: 'conmebol.sudamericana', sportsDbId: null, highlightlyId: null, kickoffLeagueId: null, allSportsLeagueId: null },
+  { id: '4de747g9v5rqo0ohmj87j4sf1fg9m2c8@import.calendar.google.com', label: 'Copa Mundial de la FIFA 2026', color: '#2fb8a6', bgColor: '#d5f1ed', bgColorSoft: '#e6f6f4', logo: 'https://lh3.googleusercontent.com/d/1Td-x8UWchJUcFPqIPhxfYJlWzpvF6t9u', espnSlug: null, sportsDbId: null, highlightlyId: null, kickoffLeagueId: null, allSportsLeagueId: null }
+];
+
+/* =========================================================
+   FECHAS (todo en hora de Bogotá, sin depender de la zona horaria de la TV)
+   ========================================================= */
+const WD_MAP = { Mon:0, Tue:1, Wed:2, Thu:3, Fri:4, Sat:5, Sun:6 };
+const WD_NAMES = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
+const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+
+function dateKeyBogota(d){ return new Date(d).toLocaleDateString('en-CA', { timeZone: CONFIG.TIMEZONE }); }
+function todayKey(){ return dateKeyBogota(new Date()); }
+function keyShift(key, days){
+  const d = new Date(key + 'T12:00:00Z');
+  d.setUTCDate(d.getUTCDate() + days);
+  return d.toISOString().slice(0, 10);
+}
+function keyToDate(key, time){ return new Date(`${key}T${time || '12:00:00'}${CONFIG.UTC_OFFSET}`); }
+function weekdayIndexBogota(d){
+  return WD_MAP[new Date(d).toLocaleString('en-US', { timeZone: CONFIG.TIMEZONE, weekday:'short' })];
+}
+function fmtTime(d){
+  return new Date(d).toLocaleTimeString('en-US', { timeZone: CONFIG.TIMEZONE, hour:'numeric', minute:'2-digit', hour12:true });
+}
+function buildDays(){
+  const today = todayKey();
+  const days = [];
+  for(let i = 0; i < CONFIG.DAYS; i++){
+    const key = keyShift(today, i);
+    days.push({
+      key,
+      label: WD_NAMES[weekdayIndexBogota(keyToDate(key))],
+      dayNum: key.slice(8, 10),
+      month: MESES[Number(key.slice(5, 7)) - 1],
+      isToday: i === 0
+    });
+  }
+  return days;
+}
+function esc(s){
+  return String(s ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+
+/* =========================================================
+   EVENTOS DE GOOGLE CALENDAR
+   ========================================================= */
+let EVENTS = [];
+
+async function fetchCalendarEvents(cal, timeMinISO, timeMaxISO){
+  const url = `https://www.googleapis.com/calendar/v3/calendars/${encodeURIComponent(cal.id)}/events`
+    + `?key=${encodeURIComponent(CONFIG.API_KEY)}`
+    + `&singleEvents=true&orderBy=startTime&maxResults=2500`
+    + `&timeMin=${encodeURIComponent(timeMinISO)}`
+    + `&timeMax=${encodeURIComponent(timeMaxISO)}`
+    + `&timeZone=${encodeURIComponent(CONFIG.TIMEZONE)}`;
+  const res = await fetch(url);
+  if(!res.ok){
+    const body = await res.text().catch(() => '');
+    throw new Error(`${cal.label}: HTTP ${res.status} ${body.slice(0,120)}`);
+  }
+  const data = await res.json();
+  return (data.items || [])
+    .filter(ev => ev.status !== 'cancelled')
+    .map(ev => ({
+      id: ev.id,
+      title: ev.summary || 'Partido',
+      startISO: ev.start.dateTime || ev.start.date,
+      endISO: ev.end ? (ev.end.dateTime || null) : null,
+      allDay: !ev.start.dateTime,
+      location: ev.location || null,
+      cal
+    }));
+}
+
+async function fetchAllEvents(){
+  const today = todayKey();
+  const timeMin = keyToDate(today, '00:00:00').toISOString();
+  const timeMax = keyToDate(keyShift(today, CONFIG.DAYS - 1), '23:59:59').toISOString();
+  const results = await Promise.allSettled(CALENDARS.map(cal => fetchCalendarEvents(cal, timeMin, timeMax)));
+  const events = []; const errors = [];
+  results.forEach((r, i) => {
+    if(r.status === 'fulfilled') events.push(...r.value);
+    else errors.push(CALENDARS[i].label + ': ' + r.reason.message);
+  });
+  return { events, errors };
+}
+
+function eventDayKey(ev){ return ev.allDay ? ev.startISO.slice(0, 10) : dateKeyBogota(ev.startISO); }
+function isTodayEvent(ev){ return eventDayKey(ev) === todayKey(); }
+
+function eventsForDay(key){
+  return EVENTS
+    .filter(e => eventDayKey(e) === key)
+    .sort((a, b) => new Date(a.startISO) - new Date(b.startISO));
+}
+
+/* =========================================================
+   ESTADO DEL PARTIDO SEGÚN EL HORARIO
+   ========================================================= */
+function matchStatus(ev){
+  const start = new Date(ev.startISO);
+  const end = ev.endISO ? new Date(ev.endISO) : new Date(start.getTime() + CONFIG.MATCH_DURATION_MIN * 60000);
+  const now = new Date();
+  if(ev.allDay || now < start) return { state:'programado', start, end, pct:0 };
+  if(now < end) return { state:'en_vivo', start, end, pct: Math.min(100, ((now - start) / (end - start)) * 100) };
+  return { state:'finalizado', start, end, pct:100 };
+}
+
+/* =========================================================
+   EMPAREJAR EVENTO DEL CALENDARIO CON EL PARTIDO DE CADA API
+   Se ignoran palabras genéricas (deportivo, atlético, independiente…)
+   para no confundir, por ejemplo, "Deportivo Pasto" con "Deportivo Cali".
+   ========================================================= */
+const GENERIC_WORDS = new Set([
+  'deportivo','deportiva','deportes','atletico','atletica','independiente','club','real',
+  'union','sporting','futbol','corporacion','asociacion','sociedad','femenino','femenina',
+  'women','city','united'
+]);
+function normalizeName(s){
+  return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ').trim();
+}
+function teamWords(name){
+  const all = normalizeName(name).split(' ').filter(w => w.length > 3);
+  const specific = all.filter(w => !GENERIC_WORDS.has(w));
+  return specific.length ? specific : all;
+}
+function titleHasTeam(titleWords, teamName){
+  const words = teamWords(teamName);
+  return words.length > 0 && words.some(w => titleWords.has(w));
+}
+function findPair(ev, list, getHome, getAway){
+  if(!list || list.length === 0) return null;
+  const titleWords = new Set(normalizeName(ev.title).split(' '));
+  for(const item of list){
+    if(titleHasTeam(titleWords, getHome(item)) && titleHasTeam(titleWords, getAway(item))) return item;
+  }
+  return null;
+}
+
+/* =========================================================
+   ESPN (fuente principal, sin key): marcador en vivo + final + goles/tarjetas
+   ========================================================= */
+const ESPN_CACHE = {}; // `${slug}|${dateKey}` -> {status, ts, events}
+
+async function fetchEspnDay(slug, dateKey){
+  const key = `${slug}|${dateKey}`;
+  const prev = ESPN_CACHE[key];
+  ESPN_CACHE[key] = { status:'loading', ts: Date.now(), events: prev ? prev.events : [] };
+  try{
+    // Un partido nocturno en Bogotá cae en el día siguiente en hora UTC: se pide hoy y mañana.
+    const from = dateKey.replace(/-/g, '');
+    const to = keyShift(dateKey, 1).replace(/-/g, '');
+    const res = await fetch(`${CONFIG.ESPN_BASE}/${slug}/scoreboard?dates=${from}-${to}`);
+    if(!res.ok) throw new Error(`ESPN HTTP ${res.status}`);
+    const data = await res.json();
+    ESPN_CACHE[key] = { status:'ready', ts: Date.now(), events: data.events || [] };
+  }catch(err){
+    console.warn('Error ESPN', slug, dateKey, err);
+    ESPN_CACHE[key] = { status:'error', ts: Date.now(), events: prev ? prev.events : [] };
+  }
+}
+
+function espnInfo(ev){
+  if(!ev.cal.espnSlug) return null;
+  const cached = ESPN_CACHE[`${ev.cal.espnSlug}|${eventDayKey(ev)}`];
+  if(!cached || !cached.events.length) return null;
+  const found = findPair(ev, cached.events,
+    e => e.competitions?.[0]?.competitors?.find(c => c.homeAway === 'home')?.team?.displayName,
+    e => e.competitions?.[0]?.competitors?.find(c => c.homeAway === 'away')?.team?.displayName);
+  if(!found) return null;
+  const comp = found.competitions[0];
+  const home = comp.competitors.find(c => c.homeAway === 'home');
+  const away = comp.competitors.find(c => c.homeAway === 'away');
+  const type = comp.status?.type || {};
+  if(!type.completed && type.state !== 'in') return null; // aún no empieza según ESPN
+  return {
+    source: 'espn',
+    golesHome: home.score, golesAway: away.score,
+    completed: !!type.completed,
+    clockText: type.completed ? 'Final' : (type.shortDetail || type.detail || 'En vivo'),
+    eventId: found.id, slug: ev.cal.espnSlug,
+    homeTeamId: home.team?.id, awayTeamId: away.team?.id
+  };
+}
+
+async function loadEspn(){
+  const pending = new Map();
+  EVENTS.forEach(ev => {
+    if(!ev.cal.espnSlug || !isTodayEvent(ev)) return;
+    const st = matchStatus(ev);
+    if(st.state === 'programado') return;
+    const info = espnInfo(ev);
+    if(info && info.completed) return; // ya tenemos el resultado final
+    const live = st.state === 'en_vivo' || (info && !info.completed);
+    const ttl = live ? CONFIG.LIVE_CACHE_TTL_MS : CONFIG.SCORE_CACHE_TTL_MS;
+    const key = `${ev.cal.espnSlug}|${eventDayKey(ev)}`;
+    const cached = ESPN_CACHE[key];
+    if(cached && cached.status === 'loading') return;
+    if(cached && (Date.now() - cached.ts) < ttl) return;
+    pending.set(key, { slug: ev.cal.espnSlug, dateKey: eventDayKey(ev) });
+  });
+  if(pending.size === 0) return false;
+  await Promise.all([...pending.values()].map(p => fetchEspnDay(p.slug, p.dateKey)));
+  return true;
+}
+
+const DETAILS_CACHE = {}; // eventId -> {status, ts, details, completed}
+
+async function fetchMatchDetails(slug, eventId){
+  const prev = DETAILS_CACHE[eventId];
+  DETAILS_CACHE[eventId] = { status:'loading', ts: Date.now(), details: prev ? prev.details : [], completed:false };
+  try{
+    const res = await fetch(`${CONFIG.ESPN_BASE}/${slug}/summary?event=${eventId}`);
+    if(!res.ok) throw new Error(`ESPN HTTP ${res.status}`);
+    const data = await res.json();
+    const c = data.header?.competitions?.[0];
+    DETAILS_CACHE[eventId] = { status:'ready', ts: Date.now(), details: c?.details || [], completed: !!c?.status?.type?.completed };
+  }catch(err){
+    console.warn('Error detalle ESPN', eventId, err);
+    DETAILS_CACHE[eventId] = { status:'error', ts: Date.now(), details: prev ? prev.details : [], completed:false };
+  }
+}
+
+async function loadDetails(){
+  const pending = [];
+  EVENTS.forEach(ev => {
+    if(!isTodayEvent(ev)) return;
+    const info = espnInfo(ev);
+    if(!info || !info.eventId) return;
+    const cached = DETAILS_CACHE[info.eventId];
+    if(cached && (cached.completed || cached.status === 'loading')) return;
+    if(cached && (Date.now() - cached.ts) < CONFIG.LIVE_CACHE_TTL_MS) return;
+    pending.push(fetchMatchDetails(info.slug, info.eventId));
+  });
+  if(pending.length === 0) return false;
+  await Promise.all(pending);
+  return true;
+}
+
+function getMatchEvents(info){
+  const cached = DETAILS_CACHE[info.eventId];
+  if(!cached || !cached.details.length) return { home:[], away:[] };
+  const home = []; const away = [];
+  cached.details.forEach(d => {
+    let icon = null;
+    if(d.redCard) icon = '🟥';
+    else if(d.yellowCard) icon = '🟨';
+    else if(d.scoringPlay) icon = d.ownGoal ? '⚽ (a.g.)' : '⚽';
+    if(!icon) return;
+    const name = d.participants?.[0]?.athlete?.shortName || d.participants?.[0]?.athlete?.displayName || '';
+    const line = `${icon} ${d.clock?.displayValue || ''} ${name}`.trim();
+    const teamId = String(d.team?.id ?? '');
+    if(teamId === String(info.homeTeamId)) home.push(line);
+    else if(teamId === String(info.awayTeamId)) away.push(line);
+  });
+  return { home, away };
+}
+
+/* =========================================================
+   RESPALDOS (solo partidos de HOY ya terminados que ESPN no resolvió)
+   Se consultan en orden: TheSportsDB → Highlightly → KickoffAPI → AllSportsAPI.
+   Solo se pasa a la siguiente fuente si la anterior ya respondió y no trae el resultado,
+   para cuidar el cupo diario de los planes gratis.
+   ========================================================= */
+function parseScore(text){
+  const p = String(text || '').split('-').map(s => Number(s.trim()));
+  return (p.length === 2 && !Number.isNaN(p[0]) && !Number.isNaN(p[1])) ? p : null;
+}
+function finalInfo(source, h, a){
+  return { source, golesHome: h, golesAway: a, completed: true, clockText: 'Final', eventId: null };
+}
+async function getJSON(url, opts){
+  const res = await fetch(url, opts);
+  if(!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
+
+const FALLBACKS = [
+  {
+    name: 'TheSportsDB', idField: 'sportsDbId', cache: {},
+    async fetchDay(id, dateKey){
+      const days = [dateKey, keyShift(dateKey, 1)];
+      const results = await Promise.all(days.map(d => getJSON(`${CONFIG.SPORTSDB_BASE}/eventsday.php?d=${d}&l=${id}`)));
+      return results.flatMap(r => r.events || []);
+    },
+    resolve(ev, list){
+      const f = findPair(ev, list, x => x.strHomeTeam, x => x.strAwayTeam);
+      if(!f || !['FT','AET','PEN'].includes(f.strStatus) || f.intHomeScore == null) return null;
+      return finalInfo('sportsdb', Number(f.intHomeScore), Number(f.intAwayScore));
+    }
+  },
+  {
+    name: 'Highlightly', idField: 'highlightlyId', cache: {},
+    async fetchDay(id, dateKey){
+      const headers = { 'x-rapidapi-key': CONFIG.HIGHLIGHTLY_KEY };
+      const days = [dateKey, keyShift(dateKey, 1)];
+      const results = await Promise.all(days.map(d =>
+        getJSON(`${CONFIG.HIGHLIGHTLY_BASE}/matches?leagueId=${id}&season=${CONFIG.HIGHLIGHTLY_SEASON}&date=${d}`, { headers })));
+      return results.flatMap(r => r.data || []);
+    },
+    resolve(ev, list){
+      const m = findPair(ev, list, x => x.homeTeam?.name, x => x.awayTeam?.name);
+      if(!m || !/finish/i.test(m.state?.description || '')) return null;
+      const p = parseScore(m.state?.score?.current);
+      return p ? finalInfo('highlightly', p[0], p[1]) : null;
+    }
+  },
+  {
+    name: 'KickoffAPI', idField: 'kickoffLeagueId', cache: {},
+    async fetchDay(id, dateKey){
+      const data = await getJSON(`${CONFIG.KICKOFFAPI_BASE}/fixtures?league=${id}&season=${CONFIG.KICKOFFAPI_SEASON}&date=${dateKey}`,
+        { headers: { 'x-api-key': CONFIG.KICKOFFAPI_KEY } });
+      return data.response || [];
+    },
+    resolve(ev, list){
+      const f = findPair(ev, list, x => x.homeTeam?.name, x => x.awayTeam?.name);
+      if(!f || !['FT','AET','PEN'].includes(f.statusShort) || f.goalsHome == null) return null;
+      return finalInfo('kickoffapi', f.goalsHome, f.goalsAway);
+    }
+  },
+  {
+    name: 'AllSportsAPI', idField: 'allSportsLeagueId', cache: {},
+    async fetchDay(id, dateKey){
+      const data = await getJSON(`${CONFIG.ALLSPORTS_BASE}?met=Fixtures&leagueId=${id}&from=${dateKey}&to=${keyShift(dateKey, 1)}&APIkey=${CONFIG.ALLSPORTS_KEY}`);
+      return data.result || [];
+    },
+    resolve(ev, list){
+      const f = findPair(ev, list, x => x.event_home_team, x => x.event_away_team);
+      if(!f || f.event_status !== 'Finished') return null;
+      const p = parseScore(f.event_final_result);
+      return p ? finalInfo('allsportsapi', p[0], p[1]) : null;
+    }
+  }
+];
+
+function fallbackInfo(ev){
+  for(const src of FALLBACKS){
+    const id = ev.cal[src.idField];
+    if(!id) continue;
+    const cached = src.cache[`${id}|${eventDayKey(ev)}`];
+    if(!cached || !cached.list.length) continue;
+    const info = src.resolve(ev, cached.list);
+    if(info) return info;
+  }
+  return null;
+}
+
+async function loadFallbacks(){
+  const jobs = new Map();
+  EVENTS.forEach(ev => {
+    if(!isTodayEvent(ev)) return;
+    const st = matchStatus(ev);
+    if(st.state !== 'finalizado') return;
+    const espn = espnInfo(ev);
+    if(espn) return;                       // ESPN ya lo tiene (terminado o todavía en juego)
+    if(fallbackInfo(ev)) return;           // algún respaldo ya lo resolvió
+    if(Date.now() - st.end.getTime() > CONFIG.FALLBACK_GIVE_UP_MS) return;
+
+    const dateKey = eventDayKey(ev);
+    for(const src of FALLBACKS){
+      const id = ev.cal[src.idField];
+      if(!id) continue;
+      const key = `${id}|${dateKey}`;
+      const cached = src.cache[key];
+      if(cached && cached.status === 'loading') break;
+      const retry = cached && cached.status === 'error' ? CONFIG.LIVE_CACHE_TTL_MS : CONFIG.FALLBACK_RETRY_MS;
+      if(!cached || (Date.now() - cached.ts) >= retry){
+        jobs.set(`${src.name}|${key}`, { src, id, dateKey, key });
+        break; // se prueba esta fuente primero; la siguiente solo si esta no lo trae
+      }
+      // Esta fuente respondió hace poco y no trae el resultado: se prueba la siguiente.
+    }
+  });
+  if(jobs.size === 0) return false;
+  await Promise.all([...jobs.values()].map(async j => {
+    const prev = j.src.cache[j.key];
+    j.src.cache[j.key] = { status:'loading', ts: Date.now(), list: prev ? prev.list : [] };
+    try{
+      const list = await j.src.fetchDay(j.id, j.dateKey);
+      j.src.cache[j.key] = { status:'ready', ts: Date.now(), list };
+    }catch(err){
+      console.warn('Error', j.src.name, j.key, err);
+      j.src.cache[j.key] = { status:'error', ts: Date.now(), list: prev ? prev.list : [] };
+    }
+  }));
+  return true;
+}
+
+function getMatchInfo(ev){
+  if(!isTodayEvent(ev)) return null;                 // las APIs solo aplican a HOY
+  if(matchStatus(ev).state === 'programado') return null;
+  return espnInfo(ev) || (matchStatus(ev).state === 'finalizado' ? fallbackInfo(ev) : null);
+}
+
+let updatingScores = false;
+async function updateScores(){
+  if(updatingScores) return;
+  updatingScores = true;
+  try{
+    const a = await loadEspn();
+    const b = await loadDetails();
+    const c = await loadFallbacks();
+    if(a || b || c) renderTable();
+  }finally{
+    updatingScores = false;
+  }
+}
+
+/* =========================================================
+   RENDER DE LA TABLA
+   ========================================================= */
+function eventsListHTML(info){
+  if(!info || !info.eventId) return '';
+  const evs = getMatchEvents(info);
+  if(!evs.home.length && !evs.away.length) return '';
+  return `<div class="events">
+    <div>${evs.home.map(l => `<div>${esc(l)}</div>`).join('')}</div>
+    <div class="right">${evs.away.map(l => `<div>${esc(l)}</div>`).join('')}</div>
+  </div>`;
+}
+
+function cardHTML(ev){
+  const st = matchStatus(ev);
+  const info = getMatchInfo(ev);
+  let state = st.state;
+  if(info) state = info.completed ? 'finalizado' : 'en_vivo'; // el estado real de la API manda sobre el horario
+
+  let statusHTML = '', extraHTML = '', progressHTML = '';
+  if(state === 'en_vivo'){
+    if(info){
+      statusHTML = `<div class="scoreBox live"><div class="score">${esc(info.golesHome)} - ${esc(info.golesAway)}</div>
+        <div class="clockTxt"><span class="dotLive"></span>${esc(info.clockText || 'En vivo')}</div></div>`;
+      extraHTML = eventsListHTML(info);
+    } else {
+      statusHTML = `<span class="badge live"><span class="dotLive"></span>En vivo</span>`;
+      progressHTML = `<div class="progress"><i style="width:${st.pct.toFixed(0)}%"></i></div>`;
+    }
+  } else if(state === 'finalizado'){
+    if(info){
+      statusHTML = `<div class="scoreBox"><div class="score">${esc(info.golesHome)} - ${esc(info.golesAway)}</div>
+        <div class="clockTxt">Final</div></div>`;
+      extraHTML = eventsListHTML(info);
+    } else {
+      statusHTML = `<span class="badge done">Final</span>`;
+    }
+  } else {
+    statusHTML = `<span class="kickoff">${ev.allDay ? 'Por definir' : fmtTime(ev.startISO)}</span>`;
+  }
+
+  return `<div class="match ${state === 'finalizado' ? 'finalizado' : ''} ${state === 'en_vivo' ? 'vivo' : ''}"
+      style="--comp-color:${ev.cal.color}; --comp-bg:${ev.cal.bgColor}; --comp-bg-soft:${ev.cal.bgColorSoft};">
+    <div class="comp"><img src="${ev.cal.logo}" alt="" onerror="this.style.display='none'">${esc(ev.cal.label)}</div>
+    <div class="title">${esc(ev.title)}</div>
+    ${ev.location ? `<div class="venue">📍 ${esc(ev.location)}</div>` : ''}
+    <div class="status">${statusHTML}</div>
+    ${extraHTML}
+    ${progressHTML}
+  </div>`;
+}
+
+let lastTableHTML = '';
+
+function renderTable(force){
+  const days = buildDays();
+  const html = days.map(d => {
+    const evs = eventsForDay(d.key);
+    const count = evs.length ? `${evs.length} partido${evs.length > 1 ? 's' : ''}` : 'Sin partidos';
+    return `<section class="day ${d.isToday ? 'today' : ''}">
+      <div class="dayHead">
+        <div class="num">${d.dayNum}</div>
+        <div class="hd">
+          <div class="wd">${d.isToday ? 'Hoy · ' : ''}${d.label}</div>
+          <div class="mo">${d.month} · ${count}</div>
+        </div>
+      </div>
+      <div class="dayBody">${evs.length ? evs.map(cardHTML).join('') : '<div class="empty">Sin partidos</div>'}</div>
+    </section>`;
+  }).join('');
+
+  if(!force && html === lastTableHTML) return; // nada cambió: no se toca la pantalla
+  lastTableHTML = html;
+  document.getElementById('table').innerHTML = html;
+  fitAll();
+  renderLegend();
+}
+
+/* ---------- Ajuste automático para que quepan TODOS los partidos ---------- */
+function fits(body){ return body.scrollHeight <= body.clientHeight + 1; }
+
+function searchScale(body, min){
+  body.style.setProperty('--s', String(min));
+  if(!fits(body)) return false;
+  let lo = min, hi = 1;
+  for(let i = 0; i < 8; i++){
+    const mid = (lo + hi) / 2;
+    body.style.setProperty('--s', mid.toFixed(3));
+    if(fits(body)) lo = mid; else hi = mid;
+  }
+  body.style.setProperty('--s', lo.toFixed(3));
+  return true;
+}
+
+function fitBody(body){
+  body.classList.remove('compact');
+  body.style.setProperty('--s', '1');
+  if(fits(body)) return;
+  if(searchScale(body, CONFIG.FIT_MIN_FULL)) return;
+  body.classList.add('compact');
+  body.style.setProperty('--s', '1');
+  if(fits(body)) return;
+  if(searchScale(body, CONFIG.FIT_MIN_COMPACT)) return;
+  body.style.setProperty('--s', String(CONFIG.FIT_MIN_COMPACT));
+}
+
+function fitAll(){
+  document.querySelectorAll('.dayBody').forEach(fitBody);
+}
+
+function renderLegend(){
+  const keys = new Set(buildDays().map(d => d.key));
+  const used = CALENDARS.filter(cal => EVENTS.some(e => e.cal === cal && keys.has(eventDayKey(e))));
+  document.getElementById('legend').innerHTML = used
+    .map(cal => `<span><i style="background:${cal.color}"></i>${esc(cal.label)}</span>`).join('');
+}
+
+function renderClock(){
+  const now = new Date();
+  document.getElementById('clockTime').textContent = fmtTime(now);
+  const key = todayKey();
+  document.getElementById('clockDate').textContent =
+    `${WD_NAMES[weekdayIndexBogota(now)]} ${key.slice(8, 10)} ${MESES[Number(key.slice(5, 7)) - 1]}`;
+}
+
+/* =========================================================
+   IMÁGENES DE DRIVE (se alternan con la tabla; si no hay, la tabla queda fija)
+   ========================================================= */
+const DRIVE = { images: [], loading: false };
+
+async function fetchDriveImages(){
+  if(DRIVE.loading) return;
+  DRIVE.loading = true;
+  try{
+    const q = encodeURIComponent(`'${CONFIG.DRIVE_FOLDER_ID}' in parents and mimeType contains 'image/' and trashed = false`);
+    const url = `https://www.googleapis.com/drive/v3/files?q=${q}&key=${encodeURIComponent(CONFIG.DRIVE_API_KEY)}`
+      + `&fields=files(id,name)&orderBy=name&pageSize=100&supportsAllDrives=true&includeItemsFromAllDrives=true`;
+    const data = await getJSON(url);
+    DRIVE.images = (data.files || []).map(f => ({ name: f.name, url: `https://lh3.googleusercontent.com/d/${f.id}` }));
+  }catch(err){
+    console.warn('Error carpeta de Drive', err); // se conservan las imágenes que ya había
+  }finally{
+    DRIVE.loading = false;
+  }
+}
+
+let showingDrive = false, viewTimer = null, slideTimer = null, slideIndex = 0;
+
+function showSlide(){
+  const el = document.getElementById('driveOverlay');
+  const imgs = DRIVE.images;
+  if(!imgs.length){ el.innerHTML = ''; return; }
+  slideIndex %= imgs.length;
+  el.innerHTML = `<img src="${imgs[slideIndex].url}" alt="${esc(imgs[slideIndex].name)}">`;
+  const next = imgs[(slideIndex + 1) % imgs.length];
+  if(next) new Image().src = next.url; // precarga la siguiente para que no parpadee
+}
+
+function setView(drive){
+  showingDrive = drive;
+  clearInterval(slideTimer); slideTimer = null;
+  if(drive){
+    slideIndex = 0; showSlide();
+    if(DRIVE.images.length > 1){
+      slideTimer = setInterval(() => { slideIndex++; showSlide(); }, CONFIG.DRIVE_IMAGE_SECONDS * 1000);
+    }
+  }
+  document.getElementById('driveOverlay').classList.toggle('visible', drive);
+  document.getElementById('table').classList.toggle('dimmed', drive);
+}
+
+function scheduleView(){
+  clearTimeout(viewTimer);
+  const secs = showingDrive
+    ? Math.max(1, DRIVE.images.length) * CONFIG.DRIVE_IMAGE_SECONDS
+    : CONFIG.TABLE_SECONDS;
+  viewTimer = setTimeout(() => {
+    setView(!showingDrive && DRIVE.images.length > 0);
+    scheduleView();
+  }, secs * 1000);
+}
+
+/* =========================================================
+   CICLO DE VIDA
+   ========================================================= */
+let currentDay = todayKey();
+let introDone = false;
+
+async function loadEvents(){
+  const statusLine = document.getElementById('statusLine');
+  try{
+    const { events, errors } = await fetchAllEvents();
+    EVENTS = events;
+    renderTable();
+    if(!introDone){
+      introDone = true;
+      setTimeout(() => document.getElementById('board').classList.remove('intro'), 2500);
+    }
+    const stamp = fmtTime(new Date());
+    statusLine.textContent = errors.length
+      ? `Actualizado ${stamp} · ${errors.length} calendario(s) con error`
+      : `Actualizado ${stamp} · ${EVENTS.length} partidos en 7 días`;
+    if(errors.length) console.warn('Errores de calendario:', errors);
+    updateScores();
+  }catch(err){
+    console.error(err);
+    statusLine.textContent = 'Error al cargar calendarios. Revisa la API key y los permisos.';
+  }
+}
+
+function tick(){
+  renderClock();
+  const nowDay = todayKey();
+  if(nowDay !== currentDay){
+    currentDay = nowDay;
+    if(CONFIG.RELOAD_AT_MIDNIGHT){ location.reload(); return; }
+    loadEvents();
+    return;
+  }
+  renderTable();   // actualiza estados por horario (programado → en vivo → final); si nada cambió, no toca la pantalla
+  updateScores();  // respeta las cachés: no consulta de más
+}
+
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(fitAll, 200);
+});
+if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll); // re-ajusta cuando carga la fuente
+
+renderClock();
+loadEvents();
+fetchDriveImages();
+scheduleView();
+setInterval(tick, CONFIG.TICK_MS);
+setInterval(loadEvents, CONFIG.REFRESH_EVENTS_MS);
+setInterval(fetchDriveImages, CONFIG.DRIVE_REFRESH_MS);
+</script>
+</body>
+</html>
