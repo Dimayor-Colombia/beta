@@ -62,10 +62,10 @@
   .clock{ font-family:'DM Mono', monospace; font-size:.9rem; color:rgba(255,255,255,.9); }
   .clock b{ font-weight:500; color:#fff; }
 
-  /* ---------- Tabla de 7 días ---------- */
+  /* ---------- Tabla de días (cantidad según CONFIG.DAYS) ---------- */
   .table{
     flex:1 1 auto; min-height:0;
-    display:grid; grid-template-columns:repeat(7, minmax(0, 1fr));
+    display:grid; grid-template-columns:repeat(var(--days, 5), minmax(0, 1fr));
     gap:.4rem; padding:.5rem .6rem;
     transition:opacity .7s ease;
   }
@@ -241,7 +241,7 @@ const CONFIG = {
   API_KEY: 'AIzaSyC2oQ0Y7RYZX_lgkgPIchochLltCnN78nc',
   TIMEZONE: 'America/Bogota',
   UTC_OFFSET: '-05:00',          // Colombia no tiene horario de verano
-  DAYS: 7,                       // hoy + 6 días siguientes
+  DAYS: 5,                       // hoy + 4 días siguientes (cambia este número para mostrar más o menos días)
   REFRESH_EVENTS_MS: 3 * 60 * 1000,
   TICK_MS: 20 * 1000,
   MATCH_DURATION_MIN: 130,
@@ -774,7 +774,9 @@ function renderTable(force){
 
   if(!force && html === lastTableHTML) return; // nada cambió: no se toca la pantalla
   lastTableHTML = html;
-  document.getElementById('table').innerHTML = html;
+  const tableEl = document.getElementById('table');
+  tableEl.style.setProperty('--days', String(CONFIG.DAYS));
+  tableEl.innerHTML = html;
   fitAll();
   renderLegend();
 }
@@ -902,7 +904,7 @@ async function loadEvents(){
     const stamp = fmtTime(new Date());
     statusLine.textContent = errors.length
       ? `Actualizado ${stamp} · ${errors.length} calendario(s) con error`
-      : `Actualizado ${stamp} · ${EVENTS.length} partidos en 7 días`;
+      : `Actualizado ${stamp} · ${EVENTS.length} partidos en ${CONFIG.DAYS} días`;
     if(errors.length) console.warn('Errores de calendario:', errors);
     updateScores();
   }catch(err){
