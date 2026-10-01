@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=1920, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -37,12 +37,19 @@
   }
   *{ box-sizing:border-box; }
   html,body{
-    width:1920px; height:1080px; margin:0; padding:0; overflow:hidden;
+    width:100%; height:100%; margin:0; padding:0; overflow:hidden;
     font-family:'DM Sans', sans-serif; color:var(--white);
     background:
       radial-gradient(900px 500px at 8% -10%, rgba(0,99,204,.55), transparent 65%),
       radial-gradient(800px 500px at 100% 110%, rgba(0,99,204,.35), transparent 65%),
       linear-gradient(180deg, var(--navy-800), var(--navy-900));
+  }
+  /* El diseño se arma en 1920x1080 y se escala completo para llenar cualquier pantalla
+     (720p, 1080p, 4K, portátil, TV, etc.) sin deformarse ni cortar nada. */
+  #stage{
+    position:absolute; left:50%; top:50%; width:1920px; height:1080px;
+    transform-origin:center center;
+    transform:translate(-50%, -50%) scale(var(--k, 1));
   }
   .board{ width:1920px; height:1080px; display:flex; flex-direction:column; }
 
@@ -214,7 +221,7 @@
 
   /* ---------- Imágenes de Drive ---------- */
   .overlay{
-    position:fixed; top:0; left:0; width:1920px; height:1080px; z-index:50;
+    position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:50;
     display:flex; align-items:center; justify-content:center; background:#000;
     opacity:0; visibility:hidden; transition:opacity .7s ease, visibility .7s ease;
   }
@@ -232,6 +239,7 @@
 </style>
 </head>
 <body>
+<div id="stage">
 <div class="board">
   <header>
     <div class="brand">
@@ -258,6 +266,7 @@
     <div class="legend" id="legend"></div>
     <span class="online"><i></i>En línea</span>
   </footer>
+</div>
 </div>
 
 <div class="overlay" id="driveOverlay"></div>
@@ -891,6 +900,15 @@ function tick(){
   renderTable();
   updateScores();
 }
+
+/* Escala el diseño de 1920x1080 al tamaño real de la ventana */
+function fitStage(){
+  const k = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+  document.getElementById('stage').style.setProperty('--k', String(k));
+}
+window.addEventListener('resize', fitStage);
+window.addEventListener('orientationchange', fitStage);
+fitStage();
 
 document.documentElement.style.setProperty('--page-seconds', CONFIG.PAGE_SECONDS + 's');
 renderClock();
