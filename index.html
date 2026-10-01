@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="viewport" content="width=1920, initial-scale=1.0">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
@@ -11,205 +11,228 @@
 <link rel="icon" type="image/x-icon" href="favicon.ico">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* =========================================================
+     DISEÑO FIJO PARA PANTALLA 1920 x 1080 (Full HD)
+     ========================================================= */
   :root{
-    color-scheme: light only; /* evita que el WebView de Android TV invierta los colores */
-    --bg:#f0f4f8;
-    --card:#ffffff;
-    --text:#0f172a;
+    color-scheme: light only;
+    --navy-900:#03122b;
+    --navy-800:#061d40;
+    --navy-700:#0a2a5c;
+    --blue:#0063cc;
+    --blue-dark:#004c99;
+    --sky:#7cc4ff;
+    --gold:#f3cc23;
+    --white:#ffffff;
+    --ink:#0f172a;
     --muted:#64748b;
     --line:#e2e8f0;
-    --primary:#004c99;
-    --primary-light:#0063cc;
-    --primary-dark:#003578;
-    --success:#059669;
-    --danger:#dc2626;
-    --soft-blue:#e6f0fa;
-    --soft-red:#fde8e8;
-    --shadow-sm:0 1px 2px rgba(15,23,42,.06);
-    --shadow:0 4px 14px rgba(15,23,42,.08);
-    --shadow-lg:0 14px 34px rgba(15,23,42,.14);
-    --ease:cubic-bezier(.16,1,.3,1);
-    --s:1; /* factor de escala por columna (lo calcula el script) */
+    --live:#e11d48;
+    --live-soft:#ffe4ea;
+    --done:#475569;
+    --done-soft:#eef1f5;
+    --page-seconds:10s;
   }
-
-  /* TODO el tamaño se basa en el tamaño de la pantalla, no en píxeles fijos.
-     En una pantalla 1920x1080, 1rem = 16px. En una TV que reporta 960x540
-     (muy común en Android TV), 1rem = 8px, y se ve exactamente igual.
-     Así el board se ve idéntico en Fully Kiosk, screenlite o cualquier navegador. */
-  html{ font-size:16px; font-size:min(0.8333vw, 1.4815vh); }
   *{ box-sizing:border-box; }
   html,body{
-    height:100%; margin:0; padding:0; overflow:hidden;
-    background:var(--bg); color:var(--text);
-    font-family:'DM Sans', sans-serif;
+    width:1920px; height:1080px; margin:0; padding:0; overflow:hidden;
+    font-family:'DM Sans', sans-serif; color:var(--white);
+    background:
+      radial-gradient(900px 500px at 8% -10%, rgba(0,99,204,.55), transparent 65%),
+      radial-gradient(800px 500px at 100% 110%, rgba(0,99,204,.35), transparent 65%),
+      linear-gradient(180deg, var(--navy-800), var(--navy-900));
   }
-  .board{ height:100vh; height:100dvh; display:flex; flex-direction:column; }
+  .board{ width:1920px; height:1080px; display:flex; flex-direction:column; }
 
-  /* ---------- Barra superior ---------- */
+  /* ---------- Encabezado ---------- */
   header{
-    flex:0 0 auto;
-    background:linear-gradient(135deg, var(--primary-dark) 0%, var(--primary) 60%, var(--primary-light) 100%);
-    color:#fff; display:flex; align-items:center; justify-content:space-between;
-    padding:.6rem 1.4rem; box-shadow:var(--shadow);
+    height:96px; flex:0 0 96px;
+    display:flex; align-items:center; justify-content:space-between;
+    padding:0 40px;
+    border-bottom:1px solid rgba(255,255,255,.08);
   }
-  .brand{ display:flex; align-items:center; gap:.9rem; }
-  .brand img{ height:1.7rem; }
-  .brand .sep{ width:1px; height:1.4rem; background:rgba(255,255,255,.3); }
-  .brand .t1{ font-size:1.1rem; font-weight:700; letter-spacing:.02em; line-height:1.15; }
-  .brand .t2{ font-size:.72rem; color:rgba(255,255,255,.75); }
-  .clock{ font-family:'DM Mono', monospace; font-size:.9rem; color:rgba(255,255,255,.9); }
-  .clock b{ font-weight:500; color:#fff; }
+  .brand{ display:flex; align-items:center; gap:22px; }
+  .brand img{ height:46px; }
+  .brand .sep{ width:2px; height:44px; background:rgba(255,255,255,.18); border-radius:2px; }
+  .brand .t1{ font-size:30px; font-weight:800; letter-spacing:.01em; line-height:1.05; }
+  .brand .t2{ font-size:15px; color:rgba(255,255,255,.6); margin-top:4px; letter-spacing:.04em; text-transform:uppercase; }
+  .headRight{ display:flex; align-items:center; gap:28px; }
+  .livePill{
+    display:none; align-items:center; gap:10px;
+    background:var(--live); color:#fff; font-weight:800; font-size:17px; letter-spacing:.06em;
+    padding:9px 18px; border-radius:30px; text-transform:uppercase;
+    box-shadow:0 0 0 0 rgba(225,29,72,.6); animation:pillPulse 2s infinite;
+  }
+  .livePill.show{ display:flex; }
+  .livePill .dot{ width:10px; height:10px; border-radius:50%; background:#fff; animation:blink 1s infinite; }
+  .clock{ text-align:right; }
+  .clock .time{ font-family:'DM Mono', monospace; font-size:38px; font-weight:500; line-height:1; }
+  .clock .date{ font-size:15px; color:rgba(255,255,255,.65); margin-top:6px; }
 
-  /* ---------- Tabla de días (cantidad según CONFIG.DAYS) ---------- */
-  .table{
-    flex:1 1 auto; min-height:0;
-    display:grid; grid-template-columns:repeat(var(--days, 5), minmax(0, 1fr));
-    gap:.4rem; padding:.5rem .6rem;
+  /* ---------- Columnas de días ---------- */
+  main{
+    height:940px; flex:0 0 940px;
+    display:grid; grid-template-columns:repeat(5, 1fr); gap:20px;
+    padding:24px 24px 24px;
     transition:opacity .7s ease;
   }
-  .table.dimmed{ opacity:0; }
+  main.dimmed{ opacity:0; }
+
   .day{
-    min-height:0; min-width:0; display:flex; flex-direction:column;
-    background:var(--card); border:1px solid var(--line); border-radius:.8rem;
-    box-shadow:var(--shadow-sm); overflow:hidden;
+    height:892px; display:flex; flex-direction:column;
+    background:rgba(255,255,255,.045);
+    border:1px solid rgba(255,255,255,.09);
+    border-radius:20px; overflow:hidden;
   }
   .day.today{
-    border-color:var(--primary-light);
-    box-shadow:var(--shadow-lg), 0 0 0 2px rgba(0,99,204,.35) inset;
+    background:rgba(0,99,204,.16);
+    border:2px solid rgba(124,196,255,.55);
+    box-shadow:0 0 40px rgba(0,99,204,.35);
   }
+
   .dayHead{
-    flex:0 0 auto; display:flex; align-items:center; justify-content:center; gap:.55rem;
-    padding:.45rem .4rem; border-bottom:1px solid var(--line);
-    background:linear-gradient(180deg, var(--soft-blue), var(--card));
+    height:84px; flex:0 0 84px;
+    display:flex; align-items:center; gap:16px; padding:0 20px;
+    border-bottom:1px solid rgba(255,255,255,.08);
   }
-  .day.today .dayHead{ background:linear-gradient(180deg, var(--primary), var(--primary-dark)); border-bottom-color:var(--primary-dark); }
-  .dayHead .num{
-    width:2.2rem; height:2.2rem; border-radius:50%; flex:0 0 auto;
-    display:flex; align-items:center; justify-content:center;
-    background:#fff; color:var(--primary-dark); box-shadow:var(--shadow-sm);
-    font-family:'DM Mono', monospace; font-weight:700; font-size:.95rem;
+  .day.today .dayHead{ background:linear-gradient(135deg, var(--blue), var(--blue-dark)); border-bottom-color:transparent; }
+  .dayNum{
+    width:56px; height:56px; flex:0 0 56px; border-radius:14px;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    background:rgba(255,255,255,.1); line-height:1;
   }
-  .dayHead .hd{ line-height:1.2; min-width:0; }
-  .dayHead .wd{ font-size:.85rem; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--primary-dark); }
-  .dayHead .mo{ font-size:.65rem; text-transform:uppercase; letter-spacing:.04em; color:var(--muted); }
-  .day.today .dayHead .wd{ color:#fff; }
-  .day.today .dayHead .mo{ color:rgba(255,255,255,.85); }
+  .day.today .dayNum{ background:#fff; color:var(--blue-dark); }
+  .dayNum b{ font-family:'DM Mono', monospace; font-size:26px; font-weight:500; }
+  .dayNum small{ font-size:11px; text-transform:uppercase; letter-spacing:.08em; margin-top:3px; opacity:.75; }
+  .dayInfo{ flex:1; min-width:0; }
+  .dayName{ font-size:22px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; display:flex; align-items:center; gap:10px; }
+  .todayChip{
+    font-size:12px; font-weight:800; letter-spacing:.1em;
+    background:var(--gold); color:var(--navy-900); padding:4px 9px; border-radius:6px;
+  }
+  .dayCount{ font-size:14px; color:rgba(255,255,255,.6); margin-top:4px; }
+  .day.today .dayCount{ color:rgba(255,255,255,.85); }
 
-  .dayBody{
-    flex:1 1 auto; min-height:0; overflow:hidden;
-    display:flex; flex-direction:column;
-    gap:calc(.4rem * var(--s)); padding:calc(.45rem * var(--s));
+  /* ---------- Cuerpo del día: páginas de 5 partidos ---------- */
+  .dayBody{ position:relative; flex:1 1 auto; }
+  .page{
+    position:absolute; top:0; left:0; right:0; bottom:0;
+    display:flex; flex-direction:column; gap:12px; padding:12px;
+    opacity:0; transform:translateY(24px); pointer-events:none;
+    transition:opacity .6s ease, transform .6s cubic-bezier(.16,1,.3,1);
   }
-  .empty{ margin:auto; color:var(--muted); font-size:.8rem; text-align:center; }
+  .page.active{ opacity:1; transform:none; }
+  .page .match{ opacity:0; transform:translateX(-14px); transition:opacity .45s ease, transform .45s cubic-bezier(.16,1,.3,1); }
+  .page.active .match{ opacity:1; transform:none; }
+  .page.active .match:nth-child(2){ transition-delay:.06s; }
+  .page.active .match:nth-child(3){ transition-delay:.12s; }
+  .page.active .match:nth-child(4){ transition-delay:.18s; }
+  .page.active .match:nth-child(5){ transition-delay:.24s; }
 
-  /* ---------- Tarjeta de partido (modo normal) ---------- */
+  .empty{
+    position:absolute; top:0; left:0; right:0; bottom:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center; gap:10px;
+    color:rgba(255,255,255,.4); font-size:18px; font-weight:500;
+  }
+  .empty .ball{ font-size:42px; opacity:.5; }
+
+  /* ---------- Tarjeta de partido (alto fijo: 5 por columna) ---------- */
   .match{
-    flex:0 0 auto; position:relative;
-    display:flex; flex-direction:column; gap:calc(.22rem * var(--s));
-    background:var(--comp-bg, var(--card));
-    border:1px solid var(--line); border-left:calc(.28rem * var(--s)) solid var(--comp-color, var(--primary));
-    border-radius:.5rem; padding:calc(.45rem * var(--s)) calc(.55rem * var(--s));
-    box-shadow:var(--shadow-sm);
+    height:140px; flex:0 0 140px; position:relative;
+    display:flex; flex-direction:column; justify-content:space-between;
+    background:#fff; color:var(--ink);
+    border-radius:14px; padding:13px 16px 12px 22px; overflow:hidden;
+    box-shadow:0 6px 18px rgba(0,0,0,.25);
   }
-  .match.finalizado{ opacity:.92; background:var(--comp-bg-soft, var(--card)); }
-  .match.vivo{ box-shadow:0 0 0 2px rgba(220,38,38,.55), var(--shadow); animation:liveGlow 1.8s ease-in-out infinite; }
+  .match::before{
+    content:''; position:absolute; left:0; top:0; bottom:0; width:7px;
+    background:var(--comp-color);
+  }
+  .match .top{ display:flex; align-items:center; justify-content:space-between; gap:10px; height:22px; }
   .comp{
-    display:flex; align-items:center; gap:.35em;
-    font-size:calc(.6rem * var(--s)); font-weight:600; letter-spacing:.03em;
-    text-transform:uppercase; color:var(--muted); line-height:1.2;
+    display:flex; align-items:center; gap:7px; min-width:0;
+    font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; color:var(--muted);
   }
-  .comp img{ width:1.3em; height:1.3em; object-fit:contain; flex:0 0 auto; border-radius:2px; }
-  .title{
-    font-size:calc(.92rem * var(--s)); font-weight:700; line-height:1.2;
-    overflow-wrap:anywhere;
-  }
-  .venue{ font-size:calc(.64rem * var(--s)); color:var(--muted); line-height:1.25; overflow-wrap:anywhere; }
-  .status{ display:flex; align-items:center; justify-content:center; }
-  .kickoff{ font-family:'DM Mono', monospace; font-weight:600; font-size:calc(.95rem * var(--s)); color:var(--primary); white-space:nowrap; }
-  .scoreBox{ display:flex; flex-direction:column; align-items:center; }
-  .score{ font-family:'DM Mono', monospace; font-weight:800; font-size:calc(1.15rem * var(--s)); line-height:1; white-space:nowrap; }
-  .scoreBox.live .score{ color:var(--danger); }
-  .clockTxt{
-    display:flex; align-items:center; gap:.35em; margin-top:.2em;
-    font-size:calc(.58rem * var(--s)); color:var(--muted); text-transform:uppercase; letter-spacing:.04em;
-  }
-  .dotLive{ width:.45em; height:.45em; min-width:5px; min-height:5px; border-radius:50%; background:var(--danger); animation:pulse 1s infinite; flex:0 0 auto; }
+  .comp img{ width:20px; height:20px; object-fit:contain; flex:0 0 20px; }
+  .comp span{ white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
   .badge{
-    display:inline-flex; align-items:center; gap:.35em; white-space:nowrap;
-    font-size:calc(.62rem * var(--s)); font-weight:700; letter-spacing:.04em; text-transform:uppercase;
-    padding:.2em .7em; border-radius:2em;
+    flex:0 0 auto; display:inline-flex; align-items:center; gap:6px;
+    font-size:12px; font-weight:800; letter-spacing:.07em; text-transform:uppercase;
+    padding:4px 10px; border-radius:20px; white-space:nowrap;
   }
-  .badge.live{ background:var(--soft-red); color:var(--danger); }
-  .badge.done{ background:#eef1f5; color:var(--muted); }
-  .events{
-    display:flex; justify-content:space-between; gap:.5em;
-    font-size:calc(.56rem * var(--s)); color:var(--muted); line-height:1.5;
-    border-top:1px dashed var(--line); padding-top:calc(.25rem * var(--s));
+  .badge.live{ background:var(--live-soft); color:var(--live); }
+  .badge.live .dot{ width:8px; height:8px; border-radius:50%; background:var(--live); animation:blink 1s infinite; }
+  .badge.done{ background:var(--done-soft); color:var(--done); }
+
+  .title{
+    font-size:20px; font-weight:800; line-height:1.18; letter-spacing:-.005em;
+    display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden;
   }
-  .events > div{ flex:1; min-width:0; overflow-wrap:anywhere; }
-  .events > div.right{ text-align:right; }
-  .progress{ height:calc(.2rem * var(--s)); min-height:2px; border-radius:2px; background:var(--soft-red); overflow:hidden; }
-  .progress i{ display:block; height:100%; background:var(--danger); }
-
-  /* ---------- Modo compacto (días con muchos partidos) ----------
-     Cada partido pasa a ser una sola fila: [hora o marcador] + [equipos].
-     El color de la competencia se mantiene en el borde izquierdo (ver leyenda abajo).
-     Nunca se ocultan partidos: solo se quitan los detalles secundarios. */
-  .dayBody.compact .match{
-    flex-direction:row; align-items:center; gap:calc(.45rem * var(--s));
-    padding:calc(.3rem * var(--s)) calc(.45rem * var(--s));
+  .bottom{ display:flex; align-items:flex-end; justify-content:space-between; gap:12px; height:28px; }
+  .venue{
+    font-size:13px; color:var(--muted); min-width:0;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis; padding-bottom:3px;
   }
-  .dayBody.compact .comp,
-  .dayBody.compact .venue,
-  .dayBody.compact .events,
-  .dayBody.compact .progress,
-  .dayBody.compact .clockTxt{ display:none; }
-  .dayBody.compact .status{ order:-1; flex:0 0 auto; justify-content:flex-start; }
-  .dayBody.compact .title{ font-size:calc(.8rem * var(--s)); font-weight:600; }
-  .dayBody.compact .kickoff{ font-size:calc(.72rem * var(--s)); }
-  .dayBody.compact .score{ font-size:calc(.85rem * var(--s)); }
+  .kickoff{ font-family:'DM Mono', monospace; font-size:24px; font-weight:500; color:var(--blue-dark); white-space:nowrap; line-height:1; }
+  .score{ display:flex; align-items:baseline; gap:8px; white-space:nowrap; line-height:1; }
+  .score b{ font-family:'DM Mono', monospace; font-size:28px; font-weight:500; }
+  .score small{ font-size:13px; font-weight:700; color:var(--live); }
 
-  /* Animación de entrada: solo en la primera carga, no en cada actualización */
-  .board.intro .day{ animation:rowIn .5s var(--ease) both; }
-  .board.intro .match{ animation:cardIn .45s var(--ease) both; }
-  .board.intro .match.vivo{ animation:cardIn .45s var(--ease) both, liveGlow 1.8s ease-in-out infinite; }
+  .match.vivo{ box-shadow:0 0 0 3px var(--live), 0 6px 22px rgba(225,29,72,.45); animation:liveGlow 2s ease-in-out infinite; }
+  .match.vivo .score b{ color:var(--live); }
+  .match.finalizado{ background:#f4f6f9; }
+  .match.finalizado .title{ color:#334155; }
+  .match .progress{ position:absolute; left:7px; right:0; bottom:0; height:4px; background:var(--live-soft); }
+  .match .progress i{ display:block; height:100%; background:var(--live); }
 
-  /* ---------- Pie ---------- */
+  /* ---------- Pie del día: indicador de páginas ---------- */
+  .dayFoot{
+    height:36px; flex:0 0 36px; display:flex; align-items:center; justify-content:center; gap:14px;
+    padding:0 20px; position:relative;
+  }
+  .dots{ display:flex; gap:8px; }
+  .dots i{ width:9px; height:9px; border-radius:50%; background:rgba(255,255,255,.25); transition:all .4s ease; }
+  .dots i.on{ width:26px; border-radius:5px; background:var(--sky); }
+  .pageTxt{ font-size:13px; color:rgba(255,255,255,.6); font-family:'DM Mono', monospace; }
+  .pbar{ position:absolute; left:0; right:0; bottom:0; height:3px; background:rgba(255,255,255,.06); }
+  .pbar i{ display:block; height:100%; width:0; background:var(--sky); animation:fill var(--page-seconds) linear forwards; }
+
+  /* ---------- Pie general ---------- */
   footer{
-    flex:0 0 auto; display:flex; align-items:center; justify-content:space-between; gap:1rem;
-    padding:.35rem 1.1rem; font-size:.68rem; color:var(--muted);
-    border-top:1px solid var(--line); background:var(--card);
+    height:44px; flex:0 0 44px;
+    display:flex; align-items:center; justify-content:space-between; gap:24px;
+    padding:0 40px; font-size:14px; color:rgba(255,255,255,.6);
+    border-top:1px solid rgba(255,255,255,.08);
   }
-  .legend{ display:flex; flex-wrap:wrap; justify-content:center; gap:.3rem .9rem; flex:1 1 auto; }
-  .legend span{ display:inline-flex; align-items:center; gap:.35em; white-space:nowrap; }
-  .legend i{ width:.75em; height:.75em; border-radius:2px; display:inline-block; }
-  .onlinePill{ display:flex; align-items:center; gap:.4em; color:var(--success); font-weight:500; white-space:nowrap; }
-  .onlineDot{ width:.5rem; height:.5rem; border-radius:50%; background:var(--success); box-shadow:0 0 6px rgba(5,150,105,.6); animation:pulse 1.6s infinite; }
-  #statusLine{ white-space:nowrap; }
+  .legend{ display:flex; gap:24px; flex:1; justify-content:center; }
+  .legend span{ display:inline-flex; align-items:center; gap:8px; white-space:nowrap; }
+  .legend i{ width:12px; height:12px; border-radius:3px; }
+  .online{ display:flex; align-items:center; gap:8px; color:#34d399; font-weight:600; }
+  .online i{ width:9px; height:9px; border-radius:50%; background:#34d399; box-shadow:0 0 8px #34d399; animation:blink 1.6s infinite; }
 
-  /* ---------- Imágenes de Drive (pantalla completa) ---------- */
+  /* ---------- Imágenes de Drive ---------- */
   .overlay{
-    position:fixed; top:0; left:0; right:0; bottom:0; z-index:50;
+    position:fixed; top:0; left:0; width:1920px; height:1080px; z-index:50;
     display:flex; align-items:center; justify-content:center; background:#000;
     opacity:0; visibility:hidden; transition:opacity .7s ease, visibility .7s ease;
   }
   .overlay.visible{ opacity:1; visibility:visible; }
   .overlay img{ max-width:100%; max-height:100%; object-fit:contain; animation:fadeIn .6s ease both; }
 
-  @keyframes pulse{ 0%,100%{opacity:1;} 50%{opacity:.35;} }
+  @keyframes blink{ 0%,100%{opacity:1;} 50%{opacity:.3;} }
   @keyframes fadeIn{ from{opacity:0;} to{opacity:1;} }
-  @keyframes rowIn{ from{opacity:0; transform:translateY(12px);} to{opacity:1; transform:translateY(0);} }
-  @keyframes cardIn{ from{opacity:0; transform:translateY(8px) scale(.97);} to{opacity:1; transform:none;} }
+  @keyframes fill{ from{width:0;} to{width:100%;} }
+  @keyframes pillPulse{ 0%{box-shadow:0 0 0 0 rgba(225,29,72,.55);} 70%{box-shadow:0 0 0 14px rgba(225,29,72,0);} 100%{box-shadow:0 0 0 0 rgba(225,29,72,0);} }
   @keyframes liveGlow{
-    0%,100%{ box-shadow:0 0 0 2px rgba(220,38,38,.55), var(--shadow); }
-    50%{ box-shadow:0 0 0 4px rgba(220,38,38,.18), var(--shadow-lg); }
+    0%,100%{ box-shadow:0 0 0 3px var(--live), 0 6px 22px rgba(225,29,72,.45); }
+    50%{ box-shadow:0 0 0 3px rgba(225,29,72,.5), 0 6px 30px rgba(225,29,72,.25); }
   }
 </style>
 </head>
 <body>
-<div class="board intro" id="board">
+<div class="board">
   <header>
     <div class="brand">
       <img src="https://lh3.googleusercontent.com/d/1l4mdgdoIJxuPBRY8VDhhC-AJQW6vgdWr" alt="DIMAYOR">
@@ -219,15 +242,21 @@
         <div class="t2">Calendarios por competencia</div>
       </div>
     </div>
-    <div class="clock">Hoy <b id="clockDate">--</b> · <b id="clockTime">--:--</b></div>
+    <div class="headRight">
+      <div class="livePill" id="livePill"><span class="dot"></span><span id="liveCount">0 en vivo</span></div>
+      <div class="clock">
+        <div class="time" id="clockTime">--:--</div>
+        <div class="date" id="clockDate">--</div>
+      </div>
+    </div>
   </header>
 
-  <div class="table" id="table"></div>
+  <main id="table"></main>
 
   <footer>
     <span id="statusLine">Iniciando…</span>
     <div class="legend" id="legend"></div>
-    <span class="onlinePill"><span class="onlineDot"></span>En línea</span>
+    <span class="online"><i></i>En línea</span>
   </footer>
 </div>
 
@@ -241,27 +270,21 @@ const CONFIG = {
   API_KEY: 'AIzaSyC2oQ0Y7RYZX_lgkgPIchochLltCnN78nc',
   TIMEZONE: 'America/Bogota',
   UTC_OFFSET: '-05:00',          // Colombia no tiene horario de verano
-  DAYS: 5,                       // hoy + 4 días siguientes (cambia este número para mostrar más o menos días)
+  DAYS: 5,                       // hoy + 4 días siguientes (el diseño está hecho para 5 columnas)
+  MATCHES_PER_PAGE: 5,           // partidos visibles por día; si hay más, el día rota entre páginas
+  PAGE_SECONDS: 10,              // segundos que se muestra cada página antes de pasar a la siguiente
   REFRESH_EVENTS_MS: 3 * 60 * 1000,
   TICK_MS: 20 * 1000,
   MATCH_DURATION_MIN: 130,
   RELOAD_AT_MIDNIGHT: true,
-
-  // Ajuste automático de cada columna para que quepan TODOS los partidos:
-  // 1) se achica la tarjeta normal hasta FIT_MIN_FULL;
-  // 2) si aún no cabe, pasa a modo compacto (una fila por partido) y se achica hasta FIT_MIN_COMPACT.
-  FIT_MIN_FULL: 0.72,
-  FIT_MIN_COMPACT: 0.35,
-
-  // Cuánto se muestra la tabla antes de pasar a las imágenes de Drive (si hay imágenes).
-  TABLE_SECONDS: 60,
+  TABLE_SECONDS: 60,             // tiempo de la tabla antes de pasar a las imágenes de Drive (si hay)
 
   // --- Marcadores: SOLO para los partidos de HOY ---
   ESPN_BASE: 'https://site.api.espn.com/apis/site/v2/sports/soccer',
-  SCORE_CACHE_TTL_MS: 10 * 60 * 1000, // partido terminado sin resultado: se reintenta cada 10 min
-  LIVE_CACHE_TTL_MS: 45 * 1000,       // partido en vivo: se refresca cada 45 s
-  FALLBACK_RETRY_MS: 15 * 60 * 1000,  // respaldos: reintento si la API aún no marcaba el partido como terminado
-  FALLBACK_GIVE_UP_MS: 4 * 60 * 60 * 1000, // deja de insistir 4 h después del final programado
+  SCORE_CACHE_TTL_MS: 10 * 60 * 1000,
+  LIVE_CACHE_TTL_MS: 45 * 1000,
+  FALLBACK_RETRY_MS: 15 * 60 * 1000,
+  FALLBACK_GIVE_UP_MS: 4 * 60 * 60 * 1000,
 
   HIGHLIGHTLY_BASE: 'https://soccer.highlightly.net',
   HIGHLIGHTLY_KEY: 'a6b66c69-8339-4d1c-9a4f-cb52ebf12cc8',
@@ -274,9 +297,7 @@ const CONFIG = {
   SPORTSDB_BASE: 'https://www.thesportsdb.com/api/v1/json/123',
 
   // --- Imágenes de Google Drive ---
-  // IMPORTANTE: aquí va el ID de la carpeta que tiene las imágenes DIRECTAMENTE adentro
-  // (la subcarpeta "Nuevas"). Si se deja el ID de la carpeta raíz, solo se leen las
-  // imágenes sueltas en la raíz, no las que están dentro de "Nuevas".
+  // Va el ID de la carpeta que tiene las imágenes directamente adentro (subcarpeta "Nuevas").
   DRIVE_FOLDER_ID: '1rJfhagt9jHHnwm_8v2kDxZeWTqg48IcT',
   DRIVE_API_KEY: 'AIzaSyBrdcqFd_zz4TTOXYta4cvwVMc0PDuaF9U',
   DRIVE_REFRESH_MS: 5 * 60 * 1000,
@@ -284,23 +305,24 @@ const CONFIG = {
 };
 
 const CALENDARS = [
-  { id: 'c_74d60f90f8e2a5d566429af24fd4c5e4c6a083e5a62027cec34a5c362b8dd49a@group.calendar.google.com', label: 'Liga BetPlay Dimayor', color: '#f3cc23', bgColor: '#fdf5d3', bgColorSoft: '#fef9e5', logo: 'https://lh3.googleusercontent.com/d/1tVCRbR0BNTcSqzoDd0jgs_9dvrvYK2pX', espnSlug: 'col.1', sportsDbId: 4497, highlightlyId: 204173, kickoffLeagueId: 239, allSportsLeagueId: 120 },
-  { id: 'c_b440f465efac86a96197d6c92dcdc371f00f55c22b201b5e4bdb446aa1d558e0@group.calendar.google.com', label: 'Torneo BetPlay Dimayor', color: '#6fb2e3', bgColor: '#e2f0f9', bgColorSoft: '#eef6fc', logo: 'https://lh3.googleusercontent.com/d/1t64NZwLCkCo4ofMZVYzhfcV8pSsVwCfv', espnSlug: 'col.2', sportsDbId: 4951, highlightlyId: 205024, kickoffLeagueId: 240, allSportsLeagueId: 517 },
-  { id: 'c_f4e132b3db024af62da58634ae149e2baabbe282f113c0f7d9ddea1ffe67d42f@group.calendar.google.com', label: 'Copa BetPlay Dimayor', color: '#3bad4c', bgColor: '#d8efdb', bgColorSoft: '#e7f5ea', logo: 'https://lh3.googleusercontent.com/d/1TELaujxqcd_Q_I3HwUxriPuUuwOx2Wrl', espnSlug: 'col.copa', sportsDbId: null, highlightlyId: 205875, kickoffLeagueId: 241, allSportsLeagueId: 475 },
-  { id: 'c_d95f7411f89d37a29d9135d9b963cb157e2c0e8ca5971cfe34320415fa6d9254@group.calendar.google.com', label: 'Superliga BetPlay Dimayor', color: '#062a63', bgColor: '#cdd4e0', bgColorSoft: '#e1e5ec', logo: 'https://lh3.googleusercontent.com/d/1UJxk_10wBGXLNs5_gaVFI6xmUkT47uYq', espnSlug: 'col.superliga', sportsDbId: null, highlightlyId: 607547, kickoffLeagueId: 713, allSportsLeagueId: 527 },
-  { id: 'c_4317288379f78b336a1509f4f6f678aad84d2b08c72797d268346ea2122beb79@group.calendar.google.com', label: 'Liga Femenina BetPlay Dimayor', color: '#b51a65', bgColor: '#f0d1e0', bgColorSoft: '#f6e4ed', logo: 'https://lh3.googleusercontent.com/d/1GRGoELSTVM2sDydzsswzi6XvjCDxK84y', espnSlug: null, sportsDbId: null, highlightlyId: 606696, kickoffLeagueId: 712, allSportsLeagueId: 466 },
-  { id: 'c_c51065fa3d2f6c30997d0480ee6168233541fa6d80f79e989c70649a83655fad@group.calendar.google.com', label: 'Otras competiciones', color: '#64748b', bgColor: '#e0e3e8', bgColorSoft: '#eceef1', logo: 'https://lh3.googleusercontent.com/d/1nAOaOA7FCdprzPq6LBwuqTEHVEAQpRzU', espnSlug: null, sportsDbId: null, highlightlyId: null, kickoffLeagueId: null, allSportsLeagueId: null },
-  { id: 'c_b9881758c97c62967ca1e1638d560af12815ed0262b6bf7d7afc2d910b7cf03a@group.calendar.google.com', label: 'CONMEBOL Libertadores', color: '#c9a227', bgColor: '#f4ecd4', bgColorSoft: '#f9f4e5', logo: 'https://lh3.googleusercontent.com/d/1iRkeR307HOxDvVcV8u_IKMkZ3_b0GAye', espnSlug: 'conmebol.libertadores', sportsDbId: null, highlightlyId: null, kickoffLeagueId: null, allSportsLeagueId: null },
-  { id: 'c_353a23183eccc44a15047f4aa971ca96526a53f16170a1b69e0357d2c324c10c@group.calendar.google.com', label: 'CONMEBOL Sudamericana', color: '#c23b3b', bgColor: '#f3d8d8', bgColorSoft: '#f8e7e7', logo: 'https://lh3.googleusercontent.com/d/1rJQeeoIs9SMrNyuLhVvJCFOtgR9Hq5FE', espnSlug: 'conmebol.sudamericana', sportsDbId: null, highlightlyId: null, kickoffLeagueId: null, allSportsLeagueId: null },
-  { id: '4de747g9v5rqo0ohmj87j4sf1fg9m2c8@import.calendar.google.com', label: 'Copa Mundial de la FIFA 2026', color: '#2fb8a6', bgColor: '#d5f1ed', bgColorSoft: '#e6f6f4', logo: 'https://lh3.googleusercontent.com/d/1Td-x8UWchJUcFPqIPhxfYJlWzpvF6t9u', espnSlug: null, sportsDbId: null, highlightlyId: null, kickoffLeagueId: null, allSportsLeagueId: null }
+  { id: 'c_74d60f90f8e2a5d566429af24fd4c5e4c6a083e5a62027cec34a5c362b8dd49a@group.calendar.google.com', label: 'Liga BetPlay Dimayor', color: '#f3cc23', logo: 'https://lh3.googleusercontent.com/d/1tVCRbR0BNTcSqzoDd0jgs_9dvrvYK2pX', espnSlug: 'col.1', sportsDbId: 4497, highlightlyId: 204173, kickoffLeagueId: 239, allSportsLeagueId: 120 },
+  { id: 'c_b440f465efac86a96197d6c92dcdc371f00f55c22b201b5e4bdb446aa1d558e0@group.calendar.google.com', label: 'Torneo BetPlay Dimayor', color: '#6fb2e3', logo: 'https://lh3.googleusercontent.com/d/1t64NZwLCkCo4ofMZVYzhfcV8pSsVwCfv', espnSlug: 'col.2', sportsDbId: 4951, highlightlyId: 205024, kickoffLeagueId: 240, allSportsLeagueId: 517 },
+  { id: 'c_f4e132b3db024af62da58634ae149e2baabbe282f113c0f7d9ddea1ffe67d42f@group.calendar.google.com', label: 'Copa BetPlay Dimayor', color: '#3bad4c', logo: 'https://lh3.googleusercontent.com/d/1TELaujxqcd_Q_I3HwUxriPuUuwOx2Wrl', espnSlug: 'col.copa', sportsDbId: null, highlightlyId: 205875, kickoffLeagueId: 241, allSportsLeagueId: 475 },
+  { id: 'c_d95f7411f89d37a29d9135d9b963cb157e2c0e8ca5971cfe34320415fa6d9254@group.calendar.google.com', label: 'Superliga BetPlay Dimayor', color: '#062a63', logo: 'https://lh3.googleusercontent.com/d/1UJxk_10wBGXLNs5_gaVFI6xmUkT47uYq', espnSlug: 'col.superliga', sportsDbId: null, highlightlyId: 607547, kickoffLeagueId: 713, allSportsLeagueId: 527 },
+  { id: 'c_4317288379f78b336a1509f4f6f678aad84d2b08c72797d268346ea2122beb79@group.calendar.google.com', label: 'Liga Femenina BetPlay Dimayor', color: '#b51a65', logo: 'https://lh3.googleusercontent.com/d/1GRGoELSTVM2sDydzsswzi6XvjCDxK84y', espnSlug: null, sportsDbId: null, highlightlyId: 606696, kickoffLeagueId: 712, allSportsLeagueId: 466 },
+  { id: 'c_c51065fa3d2f6c30997d0480ee6168233541fa6d80f79e989c70649a83655fad@group.calendar.google.com', label: 'Otras competiciones', color: '#64748b', logo: 'https://lh3.googleusercontent.com/d/1nAOaOA7FCdprzPq6LBwuqTEHVEAQpRzU', espnSlug: null, sportsDbId: null, highlightlyId: null, kickoffLeagueId: null, allSportsLeagueId: null },
+  { id: 'c_b9881758c97c62967ca1e1638d560af12815ed0262b6bf7d7afc2d910b7cf03a@group.calendar.google.com', label: 'CONMEBOL Libertadores', color: '#c9a227', logo: 'https://lh3.googleusercontent.com/d/1iRkeR307HOxDvVcV8u_IKMkZ3_b0GAye', espnSlug: 'conmebol.libertadores', sportsDbId: null, highlightlyId: null, kickoffLeagueId: null, allSportsLeagueId: null },
+  { id: 'c_353a23183eccc44a15047f4aa971ca96526a53f16170a1b69e0357d2c324c10c@group.calendar.google.com', label: 'CONMEBOL Sudamericana', color: '#c23b3b', logo: 'https://lh3.googleusercontent.com/d/1rJQeeoIs9SMrNyuLhVvJCFOtgR9Hq5FE', espnSlug: 'conmebol.sudamericana', sportsDbId: null, highlightlyId: null, kickoffLeagueId: null, allSportsLeagueId: null },
+  { id: '4de747g9v5rqo0ohmj87j4sf1fg9m2c8@import.calendar.google.com', label: 'Copa Mundial de la FIFA 2026', color: '#2fb8a6', logo: 'https://lh3.googleusercontent.com/d/1Td-x8UWchJUcFPqIPhxfYJlWzpvF6t9u', espnSlug: null, sportsDbId: null, highlightlyId: null, kickoffLeagueId: null, allSportsLeagueId: null }
 ];
 
 /* =========================================================
-   FECHAS (todo en hora de Bogotá, sin depender de la zona horaria de la TV)
+   FECHAS (todo en hora de Bogotá)
    ========================================================= */
 const WD_MAP = { Mon:0, Tue:1, Wed:2, Thu:3, Fri:4, Sat:5, Sun:6 };
 const WD_NAMES = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado','Domingo'];
 const MESES = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+const MESES_LARGO = ['enero','febrero','marzo','abril','mayo','junio','julio','agosto','septiembre','octubre','noviembre','diciembre'];
 
 function dateKeyBogota(d){ return new Date(d).toLocaleDateString('en-CA', { timeZone: CONFIG.TIMEZONE }); }
 function todayKey(){ return dateKeyBogota(new Date()); }
@@ -381,7 +403,6 @@ async function fetchAllEvents(){
 
 function eventDayKey(ev){ return ev.allDay ? ev.startISO.slice(0, 10) : dateKeyBogota(ev.startISO); }
 function isTodayEvent(ev){ return eventDayKey(ev) === todayKey(); }
-
 function eventsForDay(key){
   return EVENTS
     .filter(e => eventDayKey(e) === key)
@@ -402,8 +423,7 @@ function matchStatus(ev){
 
 /* =========================================================
    EMPAREJAR EVENTO DEL CALENDARIO CON EL PARTIDO DE CADA API
-   Se ignoran palabras genéricas (deportivo, atlético, independiente…)
-   para no confundir, por ejemplo, "Deportivo Pasto" con "Deportivo Cali".
+   (ignora palabras genéricas como "deportivo" o "atlético")
    ========================================================= */
 const GENERIC_WORDS = new Set([
   'deportivo','deportiva','deportes','atletico','atletica','independiente','club','real',
@@ -411,7 +431,7 @@ const GENERIC_WORDS = new Set([
   'women','city','united'
 ]);
 function normalizeName(s){
-  return (s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  return (s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
     .replace(/[^a-z0-9]+/g, ' ').trim();
 }
 function teamWords(name){
@@ -433,16 +453,15 @@ function findPair(ev, list, getHome, getAway){
 }
 
 /* =========================================================
-   ESPN (fuente principal, sin key): marcador en vivo + final + goles/tarjetas
+   ESPN (fuente principal, sin key)
    ========================================================= */
-const ESPN_CACHE = {}; // `${slug}|${dateKey}` -> {status, ts, events}
+const ESPN_CACHE = {};
 
 async function fetchEspnDay(slug, dateKey){
   const key = `${slug}|${dateKey}`;
   const prev = ESPN_CACHE[key];
   ESPN_CACHE[key] = { status:'loading', ts: Date.now(), events: prev ? prev.events : [] };
   try{
-    // Un partido nocturno en Bogotá cae en el día siguiente en hora UTC: se pide hoy y mañana.
     const from = dateKey.replace(/-/g, '');
     const to = keyShift(dateKey, 1).replace(/-/g, '');
     const res = await fetch(`${CONFIG.ESPN_BASE}/${slug}/scoreboard?dates=${from}-${to}`);
@@ -467,14 +486,11 @@ function espnInfo(ev){
   const home = comp.competitors.find(c => c.homeAway === 'home');
   const away = comp.competitors.find(c => c.homeAway === 'away');
   const type = comp.status?.type || {};
-  if(!type.completed && type.state !== 'in') return null; // aún no empieza según ESPN
+  if(!type.completed && type.state !== 'in') return null;
   return {
-    source: 'espn',
     golesHome: home.score, golesAway: away.score,
     completed: !!type.completed,
-    clockText: type.completed ? 'Final' : (type.shortDetail || type.detail || 'En vivo'),
-    eventId: found.id, slug: ev.cal.espnSlug,
-    homeTeamId: home.team?.id, awayTeamId: away.team?.id
+    clockText: type.completed ? 'Final' : (type.shortDetail || type.detail || '')
   };
 }
 
@@ -485,7 +501,7 @@ async function loadEspn(){
     const st = matchStatus(ev);
     if(st.state === 'programado') return;
     const info = espnInfo(ev);
-    if(info && info.completed) return; // ya tenemos el resultado final
+    if(info && info.completed) return;
     const live = st.state === 'en_vivo' || (info && !info.completed);
     const ttl = live ? CONFIG.LIVE_CACHE_TTL_MS : CONFIG.SCORE_CACHE_TTL_MS;
     const key = `${ev.cal.espnSlug}|${eventDayKey(ev)}`;
@@ -499,71 +515,15 @@ async function loadEspn(){
   return true;
 }
 
-const DETAILS_CACHE = {}; // eventId -> {status, ts, details, completed}
-
-async function fetchMatchDetails(slug, eventId){
-  const prev = DETAILS_CACHE[eventId];
-  DETAILS_CACHE[eventId] = { status:'loading', ts: Date.now(), details: prev ? prev.details : [], completed:false };
-  try{
-    const res = await fetch(`${CONFIG.ESPN_BASE}/${slug}/summary?event=${eventId}`);
-    if(!res.ok) throw new Error(`ESPN HTTP ${res.status}`);
-    const data = await res.json();
-    const c = data.header?.competitions?.[0];
-    DETAILS_CACHE[eventId] = { status:'ready', ts: Date.now(), details: c?.details || [], completed: !!c?.status?.type?.completed };
-  }catch(err){
-    console.warn('Error detalle ESPN', eventId, err);
-    DETAILS_CACHE[eventId] = { status:'error', ts: Date.now(), details: prev ? prev.details : [], completed:false };
-  }
-}
-
-async function loadDetails(){
-  const pending = [];
-  EVENTS.forEach(ev => {
-    if(!isTodayEvent(ev)) return;
-    const info = espnInfo(ev);
-    if(!info || !info.eventId) return;
-    const cached = DETAILS_CACHE[info.eventId];
-    if(cached && (cached.completed || cached.status === 'loading')) return;
-    if(cached && (Date.now() - cached.ts) < CONFIG.LIVE_CACHE_TTL_MS) return;
-    pending.push(fetchMatchDetails(info.slug, info.eventId));
-  });
-  if(pending.length === 0) return false;
-  await Promise.all(pending);
-  return true;
-}
-
-function getMatchEvents(info){
-  const cached = DETAILS_CACHE[info.eventId];
-  if(!cached || !cached.details.length) return { home:[], away:[] };
-  const home = []; const away = [];
-  cached.details.forEach(d => {
-    let icon = null;
-    if(d.redCard) icon = '🟥';
-    else if(d.yellowCard) icon = '🟨';
-    else if(d.scoringPlay) icon = d.ownGoal ? '⚽ (a.g.)' : '⚽';
-    if(!icon) return;
-    const name = d.participants?.[0]?.athlete?.shortName || d.participants?.[0]?.athlete?.displayName || '';
-    const line = `${icon} ${d.clock?.displayValue || ''} ${name}`.trim();
-    const teamId = String(d.team?.id ?? '');
-    if(teamId === String(info.homeTeamId)) home.push(line);
-    else if(teamId === String(info.awayTeamId)) away.push(line);
-  });
-  return { home, away };
-}
-
 /* =========================================================
    RESPALDOS (solo partidos de HOY ya terminados que ESPN no resolvió)
-   Se consultan en orden: TheSportsDB → Highlightly → KickoffAPI → AllSportsAPI.
-   Solo se pasa a la siguiente fuente si la anterior ya respondió y no trae el resultado,
-   para cuidar el cupo diario de los planes gratis.
+   Orden: TheSportsDB → Highlightly → KickoffAPI → AllSportsAPI
    ========================================================= */
 function parseScore(text){
   const p = String(text || '').split('-').map(s => Number(s.trim()));
   return (p.length === 2 && !Number.isNaN(p[0]) && !Number.isNaN(p[1])) ? p : null;
 }
-function finalInfo(source, h, a){
-  return { source, golesHome: h, golesAway: a, completed: true, clockText: 'Final', eventId: null };
-}
+function finalInfo(h, a){ return { golesHome: h, golesAway: a, completed: true, clockText: 'Final' }; }
 async function getJSON(url, opts){
   const res = await fetch(url, opts);
   if(!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -581,7 +541,7 @@ const FALLBACKS = [
     resolve(ev, list){
       const f = findPair(ev, list, x => x.strHomeTeam, x => x.strAwayTeam);
       if(!f || !['FT','AET','PEN'].includes(f.strStatus) || f.intHomeScore == null) return null;
-      return finalInfo('sportsdb', Number(f.intHomeScore), Number(f.intAwayScore));
+      return finalInfo(Number(f.intHomeScore), Number(f.intAwayScore));
     }
   },
   {
@@ -597,7 +557,7 @@ const FALLBACKS = [
       const m = findPair(ev, list, x => x.homeTeam?.name, x => x.awayTeam?.name);
       if(!m || !/finish/i.test(m.state?.description || '')) return null;
       const p = parseScore(m.state?.score?.current);
-      return p ? finalInfo('highlightly', p[0], p[1]) : null;
+      return p ? finalInfo(p[0], p[1]) : null;
     }
   },
   {
@@ -610,7 +570,7 @@ const FALLBACKS = [
     resolve(ev, list){
       const f = findPair(ev, list, x => x.homeTeam?.name, x => x.awayTeam?.name);
       if(!f || !['FT','AET','PEN'].includes(f.statusShort) || f.goalsHome == null) return null;
-      return finalInfo('kickoffapi', f.goalsHome, f.goalsAway);
+      return finalInfo(f.goalsHome, f.goalsAway);
     }
   },
   {
@@ -623,7 +583,7 @@ const FALLBACKS = [
       const f = findPair(ev, list, x => x.event_home_team, x => x.event_away_team);
       if(!f || f.event_status !== 'Finished') return null;
       const p = parseScore(f.event_final_result);
-      return p ? finalInfo('allsportsapi', p[0], p[1]) : null;
+      return p ? finalInfo(p[0], p[1]) : null;
     }
   }
 ];
@@ -646,11 +606,9 @@ async function loadFallbacks(){
     if(!isTodayEvent(ev)) return;
     const st = matchStatus(ev);
     if(st.state !== 'finalizado') return;
-    const espn = espnInfo(ev);
-    if(espn) return;                       // ESPN ya lo tiene (terminado o todavía en juego)
-    if(fallbackInfo(ev)) return;           // algún respaldo ya lo resolvió
+    if(espnInfo(ev)) return;
+    if(fallbackInfo(ev)) return;
     if(Date.now() - st.end.getTime() > CONFIG.FALLBACK_GIVE_UP_MS) return;
-
     const dateKey = eventDayKey(ev);
     for(const src of FALLBACKS){
       const id = ev.cal[src.idField];
@@ -661,9 +619,8 @@ async function loadFallbacks(){
       const retry = cached && cached.status === 'error' ? CONFIG.LIVE_CACHE_TTL_MS : CONFIG.FALLBACK_RETRY_MS;
       if(!cached || (Date.now() - cached.ts) >= retry){
         jobs.set(`${src.name}|${key}`, { src, id, dateKey, key });
-        break; // se prueba esta fuente primero; la siguiente solo si esta no lo trae
+        break;
       }
-      // Esta fuente respondió hace poco y no trae el resultado: se prueba la siguiente.
     }
   });
   if(jobs.size === 0) return false;
@@ -682,9 +639,10 @@ async function loadFallbacks(){
 }
 
 function getMatchInfo(ev){
-  if(!isTodayEvent(ev)) return null;                 // las APIs solo aplican a HOY
-  if(matchStatus(ev).state === 'programado') return null;
-  return espnInfo(ev) || (matchStatus(ev).state === 'finalizado' ? fallbackInfo(ev) : null);
+  if(!isTodayEvent(ev)) return null;
+  const st = matchStatus(ev).state;
+  if(st === 'programado') return null;
+  return espnInfo(ev) || (st === 'finalizado' ? fallbackInfo(ev) : null);
 }
 
 let updatingScores = false;
@@ -693,124 +651,137 @@ async function updateScores(){
   updatingScores = true;
   try{
     const a = await loadEspn();
-    const b = await loadDetails();
-    const c = await loadFallbacks();
-    if(a || b || c) renderTable();
+    const b = await loadFallbacks();
+    if(a || b) renderTable();
   }finally{
     updatingScores = false;
   }
 }
 
 /* =========================================================
-   RENDER DE LA TABLA
+   PÁGINAS DENTRO DE CADA DÍA (5 partidos por página, rotan cada 10 s)
    ========================================================= */
-function eventsListHTML(info){
-  if(!info || !info.eventId) return '';
-  const evs = getMatchEvents(info);
-  if(!evs.home.length && !evs.away.length) return '';
-  return `<div class="events">
-    <div>${evs.home.map(l => `<div>${esc(l)}</div>`).join('')}</div>
-    <div class="right">${evs.away.map(l => `<div>${esc(l)}</div>`).join('')}</div>
-  </div>`;
+let pageTick = 0;          // contador global: todos los días cambian de página al mismo tiempo
+let lastFlip = Date.now();
+
+function pageCount(n){ return Math.max(1, Math.ceil(n / CONFIG.MATCHES_PER_PAGE)); }
+
+function flipPages(){
+  pageTick++;
+  lastFlip = Date.now();
+  document.querySelectorAll('.day').forEach(dayEl => {
+    const pages = Number(dayEl.dataset.pages || 1);
+    if(pages < 2) return;
+    const active = pageTick % pages;
+    dayEl.querySelectorAll('.page').forEach((p, i) => p.classList.toggle('active', i === active));
+    dayEl.querySelectorAll('.dots i').forEach((d, i) => d.classList.toggle('on', i === active));
+    const txt = dayEl.querySelector('.pageTxt');
+    if(txt) txt.textContent = `${active + 1} / ${pages}`;
+    const bar = dayEl.querySelector('.pbar i');
+    if(bar){ bar.style.animation = 'none'; void bar.offsetWidth; bar.style.animation = ''; bar.style.animationDelay = '0s'; }
+  });
 }
 
+/* =========================================================
+   RENDER
+   ========================================================= */
 function cardHTML(ev){
   const st = matchStatus(ev);
   const info = getMatchInfo(ev);
   let state = st.state;
-  if(info) state = info.completed ? 'finalizado' : 'en_vivo'; // el estado real de la API manda sobre el horario
+  if(info) state = info.completed ? 'finalizado' : 'en_vivo';
 
-  let statusHTML = '', extraHTML = '', progressHTML = '';
+  let badge = '', right = '', progress = '';
   if(state === 'en_vivo'){
+    badge = `<span class="badge live"><span class="dot"></span>En vivo</span>`;
     if(info){
-      statusHTML = `<div class="scoreBox live"><div class="score">${esc(info.golesHome)} - ${esc(info.golesAway)}</div>
-        <div class="clockTxt"><span class="dotLive"></span>${esc(info.clockText || 'En vivo')}</div></div>`;
-      extraHTML = eventsListHTML(info);
+      right = `<div class="score"><b>${esc(info.golesHome)} - ${esc(info.golesAway)}</b>${info.clockText ? `<small>${esc(info.clockText)}</small>` : ''}</div>`;
     } else {
-      statusHTML = `<span class="badge live"><span class="dotLive"></span>En vivo</span>`;
-      progressHTML = `<div class="progress"><i style="width:${st.pct.toFixed(0)}%"></i></div>`;
+      right = `<span class="kickoff">${fmtTime(ev.startISO)}</span>`;
+      progress = `<div class="progress"><i style="width:${st.pct.toFixed(0)}%"></i></div>`;
     }
   } else if(state === 'finalizado'){
-    if(info){
-      statusHTML = `<div class="scoreBox"><div class="score">${esc(info.golesHome)} - ${esc(info.golesAway)}</div>
-        <div class="clockTxt">Final</div></div>`;
-      extraHTML = eventsListHTML(info);
-    } else {
-      statusHTML = `<span class="badge done">Final</span>`;
-    }
+    badge = `<span class="badge done">Final</span>`;
+    right = info
+      ? `<div class="score"><b>${esc(info.golesHome)} - ${esc(info.golesAway)}</b></div>`
+      : `<span class="kickoff" style="color:#64748b">${fmtTime(ev.startISO)}</span>`;
   } else {
-    statusHTML = `<span class="kickoff">${ev.allDay ? 'Por definir' : fmtTime(ev.startISO)}</span>`;
+    right = `<span class="kickoff">${ev.allDay ? 'Por definir' : fmtTime(ev.startISO)}</span>`;
   }
 
-  return `<div class="match ${state === 'finalizado' ? 'finalizado' : ''} ${state === 'en_vivo' ? 'vivo' : ''}"
-      style="--comp-color:${ev.cal.color}; --comp-bg:${ev.cal.bgColor}; --comp-bg-soft:${ev.cal.bgColorSoft};">
-    <div class="comp"><img src="${ev.cal.logo}" alt="" onerror="this.style.display='none'">${esc(ev.cal.label)}</div>
+  return `<div class="match ${state === 'en_vivo' ? 'vivo' : ''} ${state === 'finalizado' ? 'finalizado' : ''}" style="--comp-color:${ev.cal.color}">
+    <div class="top">
+      <div class="comp"><img src="${ev.cal.logo}" alt="" onerror="this.style.display='none'"><span>${esc(ev.cal.label)}</span></div>
+      ${badge}
+    </div>
     <div class="title">${esc(ev.title)}</div>
-    ${ev.location ? `<div class="venue">📍 ${esc(ev.location)}</div>` : ''}
-    <div class="status">${statusHTML}</div>
-    ${extraHTML}
-    ${progressHTML}
+    <div class="bottom">
+      <div class="venue">${ev.location ? '📍 ' + esc(ev.location) : ''}</div>
+      ${right}
+    </div>
+    ${progress}
   </div>`;
 }
 
 let lastTableHTML = '';
 
-function renderTable(force){
+function renderTable(){
   const days = buildDays();
+  const elapsed = Math.min(CONFIG.PAGE_SECONDS, (Date.now() - lastFlip) / 1000);
+  let liveCount = 0;
+
   const html = days.map(d => {
     const evs = eventsForDay(d.key);
+    const pages = pageCount(evs.length);
+    const active = pageTick % pages;
+    if(d.isToday){
+      liveCount = evs.filter(ev => {
+        const info = getMatchInfo(ev);
+        return info ? !info.completed : matchStatus(ev).state === 'en_vivo';
+      }).length;
+    }
+
+    let body;
+    if(!evs.length){
+      body = `<div class="empty"><span class="ball">⚽</span>Sin partidos</div>`;
+    } else {
+      body = '';
+      for(let p = 0; p < pages; p++){
+        const slice = evs.slice(p * CONFIG.MATCHES_PER_PAGE, (p + 1) * CONFIG.MATCHES_PER_PAGE);
+        body += `<div class="page ${p === active ? 'active' : ''}">${slice.map(cardHTML).join('')}</div>`;
+      }
+    }
+
     const count = evs.length ? `${evs.length} partido${evs.length > 1 ? 's' : ''}` : 'Sin partidos';
-    return `<section class="day ${d.isToday ? 'today' : ''}">
+    const foot = pages > 1
+      ? `<div class="dots">${Array.from({ length: pages }, (_, i) => `<i class="${i === active ? 'on' : ''}"></i>`).join('')}</div>
+         <span class="pageTxt">${active + 1} / ${pages}</span>
+         <div class="pbar"><i style="animation-delay:-${elapsed.toFixed(1)}s"></i></div>`
+      : '';
+
+    return `<section class="day ${d.isToday ? 'today' : ''}" data-pages="${pages}">
       <div class="dayHead">
-        <div class="num">${d.dayNum}</div>
-        <div class="hd">
-          <div class="wd">${d.isToday ? 'Hoy · ' : ''}${d.label}</div>
-          <div class="mo">${d.month} · ${count}</div>
+        <div class="dayNum"><b>${d.dayNum}</b><small>${d.month}</small></div>
+        <div class="dayInfo">
+          <div class="dayName">${d.label}${d.isToday ? '<span class="todayChip">HOY</span>' : ''}</div>
+          <div class="dayCount">${count}</div>
         </div>
       </div>
-      <div class="dayBody">${evs.length ? evs.map(cardHTML).join('') : '<div class="empty">Sin partidos</div>'}</div>
+      <div class="dayBody">${body}</div>
+      <div class="dayFoot">${foot}</div>
     </section>`;
   }).join('');
 
-  if(!force && html === lastTableHTML) return; // nada cambió: no se toca la pantalla
-  lastTableHTML = html;
-  const tableEl = document.getElementById('table');
-  tableEl.style.setProperty('--days', String(CONFIG.DAYS));
-  tableEl.innerHTML = html;
-  fitAll();
+  const pill = document.getElementById('livePill');
+  pill.classList.toggle('show', liveCount > 0);
+  document.getElementById('liveCount').textContent = `${liveCount} en vivo`;
+
+  // La parte de la barra de progreso cambia con el tiempo; se ignora al comparar para no redibujar sin necesidad.
+  const comparable = html.replace(/animation-delay:-[\d.]+s/g, '');
+  if(comparable === lastTableHTML) return;
+  lastTableHTML = comparable;
+  document.getElementById('table').innerHTML = html;
   renderLegend();
-}
-
-/* ---------- Ajuste automático para que quepan TODOS los partidos ---------- */
-function fits(body){ return body.scrollHeight <= body.clientHeight + 1; }
-
-function searchScale(body, min){
-  body.style.setProperty('--s', String(min));
-  if(!fits(body)) return false;
-  let lo = min, hi = 1;
-  for(let i = 0; i < 8; i++){
-    const mid = (lo + hi) / 2;
-    body.style.setProperty('--s', mid.toFixed(3));
-    if(fits(body)) lo = mid; else hi = mid;
-  }
-  body.style.setProperty('--s', lo.toFixed(3));
-  return true;
-}
-
-function fitBody(body){
-  body.classList.remove('compact');
-  body.style.setProperty('--s', '1');
-  if(fits(body)) return;
-  if(searchScale(body, CONFIG.FIT_MIN_FULL)) return;
-  body.classList.add('compact');
-  body.style.setProperty('--s', '1');
-  if(fits(body)) return;
-  if(searchScale(body, CONFIG.FIT_MIN_COMPACT)) return;
-  body.style.setProperty('--s', String(CONFIG.FIT_MIN_COMPACT));
-}
-
-function fitAll(){
-  document.querySelectorAll('.dayBody').forEach(fitBody);
 }
 
 function renderLegend(){
@@ -825,7 +796,7 @@ function renderClock(){
   document.getElementById('clockTime').textContent = fmtTime(now);
   const key = todayKey();
   document.getElementById('clockDate').textContent =
-    `${WD_NAMES[weekdayIndexBogota(now)]} ${key.slice(8, 10)} ${MESES[Number(key.slice(5, 7)) - 1]}`;
+    `${WD_NAMES[weekdayIndexBogota(now)]}, ${Number(key.slice(8, 10))} de ${MESES_LARGO[Number(key.slice(5, 7)) - 1]}`;
 }
 
 /* =========================================================
@@ -843,7 +814,7 @@ async function fetchDriveImages(){
     const data = await getJSON(url);
     DRIVE.images = (data.files || []).map(f => ({ name: f.name, url: `https://lh3.googleusercontent.com/d/${f.id}` }));
   }catch(err){
-    console.warn('Error carpeta de Drive', err); // se conservan las imágenes que ya había
+    console.warn('Error carpeta de Drive', err);
   }finally{
     DRIVE.loading = false;
   }
@@ -858,7 +829,7 @@ function showSlide(){
   slideIndex %= imgs.length;
   el.innerHTML = `<img src="${imgs[slideIndex].url}" alt="${esc(imgs[slideIndex].name)}">`;
   const next = imgs[(slideIndex + 1) % imgs.length];
-  if(next) new Image().src = next.url; // precarga la siguiente para que no parpadee
+  if(next) new Image().src = next.url;
 }
 
 function setView(drive){
@@ -889,7 +860,6 @@ function scheduleView(){
    CICLO DE VIDA
    ========================================================= */
 let currentDay = todayKey();
-let introDone = false;
 
 async function loadEvents(){
   const statusLine = document.getElementById('statusLine');
@@ -897,10 +867,6 @@ async function loadEvents(){
     const { events, errors } = await fetchAllEvents();
     EVENTS = events;
     renderTable();
-    if(!introDone){
-      introDone = true;
-      setTimeout(() => document.getElementById('board').classList.remove('intro'), 2500);
-    }
     const stamp = fmtTime(new Date());
     statusLine.textContent = errors.length
       ? `Actualizado ${stamp} · ${errors.length} calendario(s) con error`
@@ -922,21 +888,16 @@ function tick(){
     loadEvents();
     return;
   }
-  renderTable();   // actualiza estados por horario (programado → en vivo → final); si nada cambió, no toca la pantalla
-  updateScores();  // respeta las cachés: no consulta de más
+  renderTable();
+  updateScores();
 }
 
-let resizeTimer = null;
-window.addEventListener('resize', () => {
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(fitAll, 200);
-});
-if(document.fonts && document.fonts.ready) document.fonts.ready.then(fitAll); // re-ajusta cuando carga la fuente
-
+document.documentElement.style.setProperty('--page-seconds', CONFIG.PAGE_SECONDS + 's');
 renderClock();
 loadEvents();
 fetchDriveImages();
 scheduleView();
+setInterval(flipPages, CONFIG.PAGE_SECONDS * 1000);
 setInterval(tick, CONFIG.TICK_MS);
 setInterval(loadEvents, CONFIG.REFRESH_EVENTS_MS);
 setInterval(fetchDriveImages, CONFIG.DRIVE_REFRESH_MS);
